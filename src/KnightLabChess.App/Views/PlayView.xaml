@@ -94,50 +94,52 @@
             </Border>
 
             <!-- Board Center Area -->
-            <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <Viewbox Grid.Row="1" MaxHeight="600" MaxWidth="560" Stretch="Uniform">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <!-- Black Captured Tray (top) -->
-                <ItemsControl Grid.Row="0"
-                              ItemsSource="{Binding Board.CapturedBlackPieces}"
-                              HorizontalAlignment="Center"
-                              Margin="0,0,0,8">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    <!-- Black Captured Tray (top) -->
+                    <ItemsControl Grid.Row="0"
+                                  ItemsSource="{Binding Board.CapturedBlackPieces}"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,8">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                <!-- Interactive Chessboard -->
-                <controls:ChessBoardControl Grid.Row="1" DataContext="{Binding Board}" />
+                    <!-- Interactive Chessboard -->
+                    <controls:ChessBoardControl Grid.Row="1" DataContext="{Binding Board}" />
 
-                <!-- White Captured Tray (bottom) -->
-                <ItemsControl Grid.Row="2"
-                              ItemsSource="{Binding Board.CapturedWhitePieces}"
-                              HorizontalAlignment="Center"
-                              Margin="0,8,0,0">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
+                    <!-- White Captured Tray (bottom) -->
+                    <ItemsControl Grid.Row="2"
+                                  ItemsSource="{Binding Board.CapturedWhitePieces}"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Viewbox>
 
             <!-- Notification Banner -->
             <Border Grid.Row="2"

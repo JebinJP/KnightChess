@@ -6,6 +6,8 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
+        <converters:EqualityToBooleanConverter x:Key="EqualityConverter" />
+        <converters:EqualityMultiConverter x:Key="EqualityMulti" />
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -253,7 +255,16 @@
                                                      Margin="0,0,8,0"
                                                      Padding="14,6"
                                                      FontSize="12"
-                                                     Style="{StaticResource TabRadioButtonStyle}" />
+                                                     Style="{StaticResource TabRadioButtonStyle}"
+                                                     Command="{Binding DataContext.SelectBoardThemeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                     CommandParameter="{Binding}">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource EqualityMulti}" Mode="OneWay">
+                                                    <Binding Path="DataContext.SelectedBoardTheme" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                    <Binding />
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                        </RadioButton>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

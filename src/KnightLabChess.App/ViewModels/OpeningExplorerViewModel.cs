@@ -34,6 +34,8 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
     [ObservableProperty]
     private string _selectedColorFilter = "All"; // "All", "White", "Black"
 
+    private bool _isExecutingMoveSequence;
+
     public string[] ColorFilterOptions { get; } = ["All", "White", "Black"];
 
     public OpeningExplorerViewModel(IOpeningService openingService)
@@ -49,8 +51,24 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
 
     public override async Task OnNavigatedToAsync()
     {
-        await LoadOpeningsAsync();
-        ResetToStartingPosition();
+        try
+        {
+            await LoadOpeningsAsync();
+            ResetToStartingPosition();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] OnNavigatedToAsync error: {ex}");
+        }
+    }
+
+    [RelayCommand]
+    public void SelectColorFilter(string? filter)
+    {
+        if (!string.IsNullOrWhiteSpace(filter))
+        {
+            SelectedColorFilter = filter;
+        }
     }
 
     private async Task LoadOpeningsAsync()
@@ -101,43 +119,69 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
     {
         if (opening is null) return;
 
-        CurrentOpening = opening;
-        Board.NewGame();
-        MoveHistorySan.Clear();
-
-        foreach (var uci in opening.MoveListUci)
+        _isExecutingMoveSequence = true;
+        try
         {
-            Board.MakeMove(uci);
-        }
+            Board.NewGame();
+            foreach (var uci in opening.MoveListUci)
+            {
+                if (!Board.MakeMove(uci))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] Failed to play opening move: {uci}");
+                    break;
+                }
+            }
 
-        UpdateMoveHistorySan();
-        await UpdateContinuationsAsync();
+            CurrentOpening = opening;
+            UpdateMoveHistorySan();
+            await UpdateContinuationsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] SelectOpeningAsync error: {ex}");
+        }
+        finally
+        {
+            _isExecutingMoveSequence = false;
+        }
     }
 
     [RelayCommand]
-    public async Task PlayCandidateMoveAsync(OpeningMoveOption? option)
+    public void PlayCandidateMove(OpeningMoveOption? option)
     {
         if (option is null) return;
-
-        if (Board.MakeMove(option.UciMove))
+        try
         {
-            UpdateMoveHistorySan();
-            await UpdateCurrentOpeningAndContinuationsAsync();
+            Board.MakeMove(option.UciMove);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] PlayCandidateMove error: {ex}");
         }
     }
 
     [RelayCommand]
     public void ResetPosition()
     {
-        ResetToStartingPosition();
+        _isExecutingMoveSequence = true;
+        try
+        {
+            ResetToStartingPosition();
+        }
+        finally
+        {
+            _isExecutingMoveSequence = false;
+        }
     }
 
     [RelayCommand]
     public async Task UndoMoveAsync()
     {
-        Board.UndoLastMove();
-        UpdateMoveHistorySan();
-        await UpdateCurrentOpeningAndContinuationsAsync();
+        if (Board.UndoLastMove())
+        {
+            UpdateMoveHistorySan();
+            await UpdateCurrentOpeningAndContinuationsAsync();
+        }
     }
 
     [RelayCommand]
@@ -148,8 +192,16 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
 
     private async void OnBoardMoveMade(object? sender, string san)
     {
-        UpdateMoveHistorySan();
-        await UpdateCurrentOpeningAndContinuationsAsync();
+        if (_isExecutingMoveSequence) return;
+        try
+        {
+            UpdateMoveHistorySan();
+            await UpdateCurrentOpeningAndContinuationsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] OnBoardMoveMade error: {ex}");
+        }
     }
 
     private void ResetToStartingPosition()
@@ -157,7 +209,20 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
         Board.NewGame();
         MoveHistorySan.Clear();
         CurrentOpening = null;
-        _ = UpdateContinuationsAsync();
+        CandidateMoves.Clear();
+        _ = SafeUpdateContinuationsAsync();
+    }
+
+    private async Task SafeUpdateContinuationsAsync()
+    {
+        try
+        {
+            await UpdateContinuationsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] UpdateContinuationsAsync error: {ex}");
+        }
     }
 
     private void UpdateMoveHistorySan()
@@ -171,8 +236,15 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
 
     private async Task UpdateCurrentOpeningAndContinuationsAsync()
     {
-        CurrentOpening = await _openingService.FindOpeningByMovesAsync(Board.Game.MoveHistoryUci);
-        await UpdateContinuationsAsync();
+        try
+        {
+            CurrentOpening = await _openingService.FindOpeningByMovesAsync(Board.Game.MoveHistoryUci);
+            await UpdateContinuationsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OpeningExplorer] UpdateCurrentOpeningAndContinuationsAsync error: {ex}");
+        }
     }
 
     private async Task UpdateContinuationsAsync()

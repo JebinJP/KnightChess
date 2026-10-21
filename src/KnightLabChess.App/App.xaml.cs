@@ -28,6 +28,27 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Global exception handlers to prevent crashes
+        DispatcherUnhandledException += (s, args) =>
+        {
+            Debug.WriteLine($"[KnightLab] Unhandled UI exception: {args.Exception}");
+            args.Handled = true; // Prevent crash
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+            {
+                Debug.WriteLine($"[KnightLab] Unhandled domain exception: {ex}");
+            }
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, args) =>
+        {
+            Debug.WriteLine($"[KnightLab] Unobserved task exception: {args.Exception}");
+            args.SetObserved(); // Prevent crash
+        };
+
         ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         var services = new ServiceCollection();

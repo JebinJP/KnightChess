@@ -71,61 +71,63 @@
             </Border>
 
             <!-- Board & Evaluation Bar Row -->
-            <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Viewbox Grid.Row="1" MaxHeight="560" MaxWidth="600" Stretch="Uniform">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <!-- ========================================== -->
-                <!-- LIVE VERTICAL EVALUATION BAR               -->
-                <!-- ========================================== -->
-                <Border Grid.Column="0"
-                        Width="28" Height="520"
-                        Background="#FF1E1E1E"
-                        BorderBrush="{StaticResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        Margin="0,0,16,0"
-                        ClipToBounds="True">
-                    <Grid>
-                        <!-- Top Black Area -->
-                        <Border Background="#FF1E1E1E" VerticalAlignment="Stretch" />
+                    <!-- ========================================== -->
+                    <!-- LIVE VERTICAL EVALUATION BAR               -->
+                    <!-- ========================================== -->
+                    <Border Grid.Column="0"
+                            Width="28" Height="520"
+                            Background="#FF1E1E1E"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Margin="0,0,16,0"
+                            ClipToBounds="True">
+                        <Grid>
+                            <!-- Top Black Area -->
+                            <Border Background="#FF1E1E1E" VerticalAlignment="Stretch" />
 
-                        <!-- Bottom White Area (Height adjusted dynamically via Advantage Percentage) -->
-                        <ProgressBar Value="{Binding WhiteAdvantagePercentage}"
-                                     Minimum="0" Maximum="100"
-                                     Orientation="Vertical"
-                                     Height="520" Width="28"
-                                     Foreground="#FFF5F5F5"
-                                     Background="#FF1E1E1E"
-                                     BorderThickness="0" />
+                            <!-- Bottom White Area (Height adjusted dynamically via Advantage Percentage) -->
+                            <ProgressBar Value="{Binding WhiteAdvantagePercentage}"
+                                         Minimum="0" Maximum="100"
+                                         Orientation="Vertical"
+                                         Height="520" Width="28"
+                                         Foreground="#FFF5F5F5"
+                                         Background="#FF1E1E1E"
+                                         BorderThickness="0" />
 
-                        <!-- Advantage Score Badge Overlay -->
-                        <Border Background="#CC121417"
-                                CornerRadius="3"
-                                Padding="3,2"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding EvaluationScoreText}"
-                                       FontSize="10"
-                                       FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       HorizontalAlignment="Center" />
-                        </Border>
-                    </Grid>
-                </Border>
+                            <!-- Advantage Score Badge Overlay -->
+                            <Border Background="#CC121417"
+                                    CornerRadius="3"
+                                    Padding="3,2"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding EvaluationScoreText}"
+                                           FontSize="10"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
 
-                <!-- Main Board -->
-                <Border Grid.Column="1"
-                        Background="{StaticResource BackgroundDarkBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        Padding="16">
-                    <controls:ChessBoardControl DataContext="{Binding Board}" />
-                </Border>
-            </Grid>
+                    <!-- Main Board -->
+                    <Border Grid.Column="1"
+                            Background="{StaticResource BackgroundDarkBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="16">
+                        <controls:ChessBoardControl DataContext="{Binding Board}" />
+                    </Border>
+                </Grid>
+            </Viewbox>
         </Grid>
 
         <!-- Right Column: Engine Metrics, PV Line, and Position Controls -->

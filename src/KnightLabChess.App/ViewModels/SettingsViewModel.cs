@@ -53,27 +53,35 @@ public partial class SettingsViewModel : PageViewModelBase
 
     public override async Task OnNavigatedToAsync()
     {
-        DatabasePath = _settingsService.GetDatabasePath();
-        IsStockfishAvailable = _engineService.IsEngineAvailable;
-        EngineStatusText = IsStockfishAvailable
-            ? $"{_engineService.EngineName} Connected"
-            : "Embedded Fallback Tactical Engine Active (Pure Offline)";
+        try
+        {
+            DatabasePath = _settingsService.GetDatabasePath();
+            IsStockfishAvailable = _engineService.IsEngineAvailable;
+            EngineStatusText = IsStockfishAvailable
+                ? $"{_engineService.EngineName} Connected"
+                : "Embedded Fallback Tactical Engine Active (Pure Offline)";
 
-        var s = await _settingsService.GetSettingsAsync();
-        StockfishPath = s.StockfishPath;
-        EngineDepth = s.EngineDepth;
-        EngineThreads = s.EngineThreads;
-        EngineHashMb = s.EngineHashMb;
-        UseFallbackIfNotFound = s.UseBuiltinFallbackIfNotFound;
+            var s = await _settingsService.GetSettingsAsync();
+            StockfishPath = s.StockfishPath;
+            EngineDepth = s.EngineDepth;
+            EngineThreads = s.EngineThreads;
+            EngineHashMb = s.EngineHashMb;
+            UseFallbackIfNotFound = s.UseBuiltinFallbackIfNotFound;
 
-        SelectedBoardTheme = s.BoardTheme;
-        HighlightLegalMoves = s.HighlightLegalMoves;
-        ShowMoveAnimations = s.ShowMoveAnimations;
-        SoundEnabled = s.SoundEnabled;
-        SoundVolume = s.SoundVolume;
+            SelectedBoardTheme = s.BoardTheme;
+            HighlightLegalMoves = s.HighlightLegalMoves;
+            ShowMoveAnimations = s.ShowMoveAnimations;
+            SoundEnabled = s.SoundEnabled;
+            SoundVolume = s.SoundVolume;
 
-        AutoQueenPromotion = s.AutoQueenPromotion;
-        ShowEngineEvalDuringPlay = s.ShowEngineEvalDuringPlay;
+            AutoQueenPromotion = s.AutoQueenPromotion;
+            ShowEngineEvalDuringPlay = s.ShowEngineEvalDuringPlay;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Settings] OnNavigatedToAsync error: {ex}");
+            FeedbackMessage = "Failed to load settings.";
+        }
     }
 
     [RelayCommand]
@@ -119,56 +127,99 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    public void SelectBoardTheme(string? theme)
+    {
+        if (!string.IsNullOrWhiteSpace(theme))
+        {
+            SelectedBoardTheme = theme;
+        }
+    }
+
+    [RelayCommand]
     public async Task SaveSettingsAsync()
     {
-        var settings = new UserSettings
+        try
         {
-            StockfishPath = StockfishPath,
-            EngineDepth = EngineDepth,
-            EngineThreads = EngineThreads,
-            EngineHashMb = EngineHashMb,
-            UseBuiltinFallbackIfNotFound = UseFallbackIfNotFound,
+            var settings = new UserSettings
+            {
+                StockfishPath = StockfishPath,
+                EngineDepth = EngineDepth,
+                EngineThreads = EngineThreads,
+                EngineHashMb = EngineHashMb,
+                UseBuiltinFallbackIfNotFound = UseFallbackIfNotFound,
 
-            BoardTheme = SelectedBoardTheme,
-            HighlightLegalMoves = HighlightLegalMoves,
-            ShowMoveAnimations = ShowMoveAnimations,
-            SoundEnabled = SoundEnabled,
-            SoundVolume = SoundVolume,
+                BoardTheme = SelectedBoardTheme,
+                HighlightLegalMoves = HighlightLegalMoves,
+                ShowMoveAnimations = ShowMoveAnimations,
+                SoundEnabled = SoundEnabled,
+                SoundVolume = SoundVolume,
 
-            AutoQueenPromotion = AutoQueenPromotion,
-            ShowEngineEvalDuringPlay = ShowEngineEvalDuringPlay
-        };
+                AutoQueenPromotion = AutoQueenPromotion,
+                ShowEngineEvalDuringPlay = ShowEngineEvalDuringPlay
+            };
 
-        await _settingsService.SaveSettingsAsync(settings);
-        FeedbackMessage = "✓ Settings saved successfully!";
+            await _settingsService.SaveSettingsAsync(settings);
 
-        await Task.Delay(3000);
-        FeedbackMessage = null;
+            if (!string.IsNullOrWhiteSpace(StockfishPath) && File.Exists(StockfishPath))
+            {
+                try
+                {
+                    await _engineService.InitializeAsync(StockfishPath);
+                    IsStockfishAvailable = _engineService.IsEngineAvailable;
+                    EngineStatusText = IsStockfishAvailable
+                        ? $"{_engineService.EngineName} Connected"
+                        : "Engine failed to initialize. Embedded fallback active.";
+                }
+                catch (Exception engineEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Settings] Engine re-init error: {engineEx}");
+                    EngineStatusText = "Engine initialization failed. Embedded fallback active.";
+                }
+            }
+
+            FeedbackMessage = "✓ Settings saved successfully!";
+
+            await Task.Delay(3000);
+            FeedbackMessage = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Settings] SaveSettingsAsync error: {ex}");
+            FeedbackMessage = $"Failed to save settings: {ex.Message}";
+        }
     }
 
     [RelayCommand]
     public async Task ResetToDefaultsAsync()
     {
-        var defaults = new UserSettings();
-        StockfishPath = defaults.StockfishPath;
-        EngineDepth = defaults.EngineDepth;
-        EngineThreads = defaults.EngineThreads;
-        EngineHashMb = defaults.EngineHashMb;
-        UseFallbackIfNotFound = defaults.UseBuiltinFallbackIfNotFound;
+        try
+        {
+            var defaults = new UserSettings();
+            StockfishPath = defaults.StockfishPath;
+            EngineDepth = defaults.EngineDepth;
+            EngineThreads = defaults.EngineThreads;
+            EngineHashMb = defaults.EngineHashMb;
+            UseFallbackIfNotFound = defaults.UseBuiltinFallbackIfNotFound;
 
-        SelectedBoardTheme = defaults.BoardTheme;
-        HighlightLegalMoves = defaults.HighlightLegalMoves;
-        ShowMoveAnimations = defaults.ShowMoveAnimations;
-        SoundEnabled = defaults.SoundEnabled;
-        SoundVolume = defaults.SoundVolume;
+            SelectedBoardTheme = defaults.BoardTheme;
+            HighlightLegalMoves = defaults.HighlightLegalMoves;
+            ShowMoveAnimations = defaults.ShowMoveAnimations;
+            SoundEnabled = defaults.SoundEnabled;
+            SoundVolume = defaults.SoundVolume;
 
-        AutoQueenPromotion = defaults.AutoQueenPromotion;
-        ShowEngineEvalDuringPlay = defaults.ShowEngineEvalDuringPlay;
+            AutoQueenPromotion = defaults.AutoQueenPromotion;
+            ShowEngineEvalDuringPlay = defaults.ShowEngineEvalDuringPlay;
 
-        await _settingsService.SaveSettingsAsync(defaults);
-        FeedbackMessage = "Settings restored to defaults.";
+            await _settingsService.SaveSettingsAsync(defaults);
+            FeedbackMessage = "Settings restored to defaults.";
 
-        await Task.Delay(3000);
-        FeedbackMessage = null;
+            await Task.Delay(3000);
+            FeedbackMessage = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Settings] ResetToDefaultsAsync error: {ex}");
+            FeedbackMessage = $"Failed to reset settings: {ex.Message}";
+        }
     }
 }

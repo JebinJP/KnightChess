@@ -315,38 +315,45 @@ public partial class LearnViewModel : PageViewModelBase
 
     private async void CompleteLesson()
     {
-        if (_activeLesson is null) return;
-
-        double mastery = _totalAttempts > 0
-            ? (double)_correctAnswers / _totalAttempts * 100
-            : 100;
-
-        var progress = await _progressService.GetLessonProgressAsync(_activeLesson.Id)
-            ?? new LessonProgress { LessonId = _activeLesson.Id };
-
-        progress.IsCompleted = true;
-        progress.CompletedAt = DateTime.UtcNow;
-        progress.LastAccessedAt = DateTime.UtcNow;
-        progress.TotalSteps = TotalSteps;
-        progress.CurrentStepIndex = TotalSteps;
-        progress.CorrectAnswers = _correctAnswers;
-        progress.TotalAttempts = _totalAttempts;
-        progress.MasteryScore = mastery;
-
-        await _progressService.SaveLessonProgressAsync(progress);
-
-        StepTitle = "Lesson Complete!";
-        StepText = $"You completed \"{_activeLesson.Title}\" with a mastery score of {mastery:F0}%.";
-        CanAdvance = false;
-        IsExerciseStep = false;
-        ProgressPercentage = 100;
-
-        // Update the lesson list
-        var listItem = Lessons.FirstOrDefault(l => l.Id == _activeLesson.Id);
-        if (listItem is not null)
+        try
         {
-            listItem.IsCompleted = true;
-            listItem.MasteryScore = mastery;
+            if (_activeLesson is null) return;
+
+            double mastery = _totalAttempts > 0
+                ? (double)_correctAnswers / _totalAttempts * 100
+                : 100;
+
+            var progress = await _progressService.GetLessonProgressAsync(_activeLesson.Id)
+                ?? new LessonProgress { LessonId = _activeLesson.Id };
+
+            progress.IsCompleted = true;
+            progress.CompletedAt = DateTime.UtcNow;
+            progress.LastAccessedAt = DateTime.UtcNow;
+            progress.TotalSteps = TotalSteps;
+            progress.CurrentStepIndex = TotalSteps;
+            progress.CorrectAnswers = _correctAnswers;
+            progress.TotalAttempts = _totalAttempts;
+            progress.MasteryScore = mastery;
+
+            await _progressService.SaveLessonProgressAsync(progress);
+
+            StepTitle = "Lesson Complete!";
+            StepText = $"You completed \"{_activeLesson.Title}\" with a mastery score of {mastery:F0}%.";
+            CanAdvance = false;
+            IsExerciseStep = false;
+            ProgressPercentage = 100;
+
+            // Update the lesson list
+            var listItem = Lessons.FirstOrDefault(l => l.Id == _activeLesson.Id);
+            if (listItem is not null)
+            {
+                listItem.IsCompleted = true;
+                listItem.MasteryScore = mastery;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Learn] CompleteLesson error: {ex}");
         }
     }
 

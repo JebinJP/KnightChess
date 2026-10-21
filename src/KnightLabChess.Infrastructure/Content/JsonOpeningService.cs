@@ -119,15 +119,22 @@ public class JsonOpeningService : IOpeningService
                 }
             }
 
-            if (matchCount > longestMatch && matchCount == moves.Count)
+            // An opening matches if all its defined moves match the played prefix
+            if (matchCount == opening.MoveListUci.Count && matchCount > longestMatch)
             {
                 longestMatch = matchCount;
                 bestMatch = opening;
             }
-            else if (matchCount == moves.Count && matchCount == opening.MoveListUci.Count)
-            {
-                return opening; // Exact match
-            }
+        }
+
+        // If no complete opening matched yet (e.g. only 1 move played), show most popular parent opening
+        if (bestMatch is null && moves.Count > 0)
+        {
+            bestMatch = all
+                .Where(o => o.MoveListUci.Count >= moves.Count &&
+                            moves.Select((m, i) => string.Equals(m, o.MoveListUci[i], StringComparison.OrdinalIgnoreCase)).All(x => x))
+                .OrderByDescending(o => o.MasterGamesCount)
+                .FirstOrDefault();
         }
 
         return bestMatch;
@@ -174,10 +181,12 @@ public class JsonOpeningService : IOpeningService
             double avgDraw = entries.Average(e => e.DrawPercent);
             double avgBlackWin = entries.Average(e => e.BlackWinPercent);
 
+            string sanMove = ExtractSanMove(topEntry.MovesSan, moves.Count) ?? FormatUciToSanHint(nextMove);
+
             results.Add(new OpeningMoveOption
             {
                 UciMove = nextMove,
-                SanMove = FormatUciToSanHint(nextMove),
+                SanMove = sanMove,
                 ContinuationName = topEntry.FullName,
                 GamesCount = totalGames,
                 WhiteWinPercent = Math.Round(avgWhiteWin, 1),
@@ -187,6 +196,16 @@ public class JsonOpeningService : IOpeningService
         }
 
         return results.OrderByDescending(r => r.GamesCount).ToList();
+    }
+
+    private static string? ExtractSanMove(string movesSan, int moveIndex)
+    {
+        if (string.IsNullOrWhiteSpace(movesSan)) return null;
+        var tokens = movesSan.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(t => !char.IsDigit(t[0])) // filter out move numbers like "1.", "2."
+            .ToList();
+
+        return moveIndex >= 0 && moveIndex < tokens.Count ? tokens[moveIndex] : null;
     }
 
     private static string NormalizeFen(string fen)
@@ -199,7 +218,6 @@ public class JsonOpeningService : IOpeningService
 
     private static string FormatUciToSanHint(string uci)
     {
-        // Simple human friendly conversion fallback (e.g. e2e4 -> e4)
         if (uci.Length >= 4)
         {
             return uci[2..4];

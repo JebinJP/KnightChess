@@ -7,6 +7,9 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
+        <converters:EqualityToBooleanConverter x:Key="EqualityConverter" />
+        <converters:DoubleToGridLengthConverter x:Key="DoubleToGridLength" />
+        <converters:EqualityMultiConverter x:Key="EqualityMulti" />
     </UserControl.Resources>
 
     <Grid Margin="24">
@@ -188,9 +191,9 @@
                             <Border Grid.Row="1" Height="10" CornerRadius="5" Background="#1E232A" ClipToBounds="True">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="{Binding CurrentOpening.WhiteWinPercent, FallbackValue=38, Mode=OneWay, StringFormat='{}{0}*'}" />
-                                        <ColumnDefinition Width="{Binding CurrentOpening.DrawPercent, FallbackValue=40, Mode=OneWay, StringFormat='{}{0}*'}" />
-                                        <ColumnDefinition Width="{Binding CurrentOpening.BlackWinPercent, FallbackValue=22, Mode=OneWay, StringFormat='{}{0}*'}" />
+                                        <ColumnDefinition Width="{Binding CurrentOpening.WhiteWinPercent, FallbackValue=38, Converter={StaticResource DoubleToGridLength}}" />
+                                        <ColumnDefinition Width="{Binding CurrentOpening.DrawPercent, FallbackValue=40, Converter={StaticResource DoubleToGridLength}}" />
+                                        <ColumnDefinition Width="{Binding CurrentOpening.BlackWinPercent, FallbackValue=22, Converter={StaticResource DoubleToGridLength}}" />
                                     </Grid.ColumnDefinitions>
                                     <Border Grid.Column="0" Background="#10B981" ToolTip="White Wins" />
                                     <Border Grid.Column="1" Background="#6B7280" ToolTip="Draws" />
@@ -278,11 +281,12 @@
 
                                             <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-                                                    <TextBlock Text="{Binding UciMove}"
-                                                               FontWeight="Bold"
-                                                               FontSize="13"
-                                                               Foreground="{StaticResource AccentBrush}"
-                                                               Margin="0,0,10,0" />
+                                                    <Border Background="#252A30" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                                        <TextBlock Text="{Binding SanMove}"
+                                                                   FontWeight="Bold"
+                                                                   FontSize="13"
+                                                                   Foreground="{StaticResource AccentBrush}" />
+                                                    </Border>
                                                     <TextBlock Text="{Binding ContinuationName}"
                                                                FontSize="12"
                                                                Foreground="{StaticResource TextPrimaryBrush}"
@@ -350,7 +354,15 @@
                                                  Padding="12,5"
                                                  FontSize="11"
                                                  Style="{StaticResource TabRadioButtonStyle}"
-                                                 IsChecked="{Binding DataContext.SelectedColorFilter, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={x:Null}}" />
+                                                 Command="{Binding DataContext.SelectColorFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}">
+                                        <RadioButton.IsChecked>
+                                            <MultiBinding Converter="{StaticResource EqualityMulti}" Mode="OneWay">
+                                                <Binding Path="DataContext.SelectedColorFilter" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                                <Binding />
+                                            </MultiBinding>
+                                        </RadioButton.IsChecked>
+                                    </RadioButton>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

@@ -47,9 +47,16 @@ public partial class PuzzlesViewModel : PageViewModelBase
 
     public override async Task OnNavigatedToAsync()
     {
-        var stats = await _progressService.GetUserStatsAsync();
-        TotalPuzzlesSolved = stats.TotalPuzzlesSolved;
-        await LoadNextPuzzleAsync();
+        try
+        {
+            var stats = await _progressService.GetUserStatsAsync();
+            TotalPuzzlesSolved = stats.TotalPuzzlesSolved;
+            await LoadNextPuzzleAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Puzzles] OnNavigatedToAsync error: {ex}");
+        }
     }
 
     [RelayCommand]
@@ -98,76 +105,94 @@ public partial class PuzzlesViewModel : PageViewModelBase
 
     private async void OnBoardMoveMade(object? sender, string san)
     {
-        if (CurrentPuzzle is null || IsPuzzleSolved) return;
-
-        // The move played on board is the last in history
-        var playedUci = Board.Game.MoveHistoryUci.LastOrDefault();
-        if (string.IsNullOrEmpty(playedUci)) return;
-
-        if (CurrentMoveIndex < CurrentPuzzle.SolutionMoves.Count)
+        try
         {
-            var expectedUci = CurrentPuzzle.SolutionMoves[CurrentMoveIndex];
+            if (CurrentPuzzle is null || IsPuzzleSolved) return;
 
-            // Normalize promotion characters (e.g., e7e8q)
-            if (string.Equals(playedUci, expectedUci, StringComparison.OrdinalIgnoreCase))
+            // The move played on board is the last in history
+            var playedUci = Board.Game.MoveHistoryUci.LastOrDefault();
+            if (string.IsNullOrEmpty(playedUci)) return;
+
+            if (CurrentMoveIndex < CurrentPuzzle.SolutionMoves.Count)
             {
-                CurrentMoveIndex++;
-                IsIncorrect = false;
+                var expectedUci = CurrentPuzzle.SolutionMoves[CurrentMoveIndex];
 
-                // Did the user complete the full solution?
-                if (CurrentMoveIndex >= CurrentPuzzle.SolutionMoves.Count)
+                // Normalize promotion characters (e.g., e7e8q)
+                if (string.Equals(playedUci, expectedUci, StringComparison.OrdinalIgnoreCase))
                 {
-                    await HandlePuzzleSolvedAsync();
+                    CurrentMoveIndex++;
+                    IsIncorrect = false;
+
+                    // Did the user complete the full solution?
+                    if (CurrentMoveIndex >= CurrentPuzzle.SolutionMoves.Count)
+                    {
+                        await HandlePuzzleSolvedAsync();
+                    }
+                    else
+                    {
+                        // Opponent auto-reply move
+                        FeedbackText = "Great move! Keep going...";
+                        Board.IsInputDisabled = true;
+
+                        await Task.Delay(500);
+
+                        if (CurrentMoveIndex < CurrentPuzzle.SolutionMoves.Count)
+                        {
+                            var replyUci = CurrentPuzzle.SolutionMoves[CurrentMoveIndex];
+                            Board.MakeMove(replyUci);
+                            CurrentMoveIndex++;
+                        }
+
+                        Board.IsInputDisabled = false;
+                    }
                 }
                 else
                 {
-                    // Opponent auto-reply move
-                    FeedbackText = "Great move! Keep going...";
-                    Board.IsInputDisabled = true;
+                    // Incorrect move
+                    IsIncorrect = true;
+                    FeedbackText = "Not the best move. Try again!";
+                    SolvedStreak = 0;
 
-                    await Task.Delay(500);
+                    await Task.Delay(600);
 
-                    var replyUci = CurrentPuzzle.SolutionMoves[CurrentMoveIndex];
-                    Board.MakeMove(replyUci);
-                    CurrentMoveIndex++;
-
-                    Board.IsInputDisabled = false;
+                    // Undo player's incorrect move
+                    Board.UndoMove();
                 }
             }
-            else
-            {
-                // Incorrect move
-                IsIncorrect = true;
-                FeedbackText = "Not the best move. Try again!";
-                SolvedStreak = 0;
-
-                await Task.Delay(600);
-
-                // Undo player's incorrect move
-                Board.UndoMove();
-            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Puzzles] OnBoardMoveMade error: {ex}");
         }
     }
 
     private async Task HandlePuzzleSolvedAsync()
     {
-        IsPuzzleSolved = true;
-        ShowExplanation = true;
-        FeedbackText = "✓ Puzzle Solved! Brilliant calculation.";
-        SolvedStreak++;
-        TotalPuzzlesSolved++;
-        Board.IsInputDisabled = true;
-
-        if (CurrentPuzzle is not null)
+        try
         {
-            var progress = new PuzzleProgress
+            IsPuzzleSolved = true;
+            ShowExplanation = true;
+            FeedbackText = "✓ Puzzle Solved! Brilliant calculation.";
+            SolvedStreak++;
+            TotalPuzzlesSolved++;
+            Board.IsInputDisabled = true;
+
+            if (CurrentPuzzle is not null)
             {
-                PuzzleId = CurrentPuzzle.Id,
-                IsSolved = true,
-                SolvedAt = DateTime.UtcNow,
-                Attempts = 1
-            };
-            await _progressService.SavePuzzleProgressAsync(progress);
+                var progress = new PuzzleProgress
+                {
+                    PuzzleId = CurrentPuzzle.Id,
+                    IsSolved = true,
+                    SolvedAt = DateTime.UtcNow,
+                    LastAttemptAt = DateTime.UtcNow,
+                    Attempts = 1
+                };
+                await _progressService.SavePuzzleProgressAsync(progress);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Puzzles] HandlePuzzleSolvedAsync error: {ex}");
         }
     }
 

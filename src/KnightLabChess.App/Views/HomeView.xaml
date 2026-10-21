@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:KnightLabChess.App.ViewModels">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="32" MaxWidth="1000" HorizontalAlignment="Left">
+        <StackPanel Margin="32" MaxWidth="1100" HorizontalAlignment="Stretch">
             <!-- Welcome Header -->
             <Border Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource BorderBrush}"

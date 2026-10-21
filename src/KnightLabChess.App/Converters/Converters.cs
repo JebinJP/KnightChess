@@ -13,7 +13,13 @@ public class BoolToVisibilityConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         bool invert = parameter is string s && s.Equals("Invert", StringComparison.OrdinalIgnoreCase);
-        bool boolValue = value is bool b && b;
+        bool boolValue;
+        if (value is bool b)
+            boolValue = b;
+        else if (value is string str)
+            boolValue = !string.IsNullOrEmpty(str);
+        else
+            boolValue = value is not null;
         if (invert) boolValue = !boolValue;
         return boolValue ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -130,3 +136,42 @@ public class EqualityToBooleanConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>
+/// Converts a numeric percentage to a proportional Star GridLength for ColumnDefinitions.
+/// </summary>
+public class DoubleToGridLengthConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        double val = 1.0;
+        if (value is double d) val = d;
+        else if (value is int i) val = i;
+        else if (value != null && double.TryParse(value.ToString(), out var parsed)) val = parsed;
+
+        return new GridLength(Math.Max(val, 0.1), GridUnitType.Star);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Compares two bound values for equality, returning true if they match.
+/// Useful for ItemsControl RadioButton IsChecked bindings.
+/// </summary>
+public class EqualityMultiConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length >= 2 && values[0] is not null && values[1] is not null)
+        {
+            return string.Equals(values[0].ToString(), values[1].ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+

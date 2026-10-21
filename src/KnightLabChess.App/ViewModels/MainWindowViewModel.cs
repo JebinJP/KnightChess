@@ -51,16 +51,31 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (item == SelectedNavItem) return;
 
-        // Navigate away from current
-        if (CurrentPage is not null)
+        try
         {
-            await CurrentPage.OnNavigatedFromAsync();
-        }
+            // Navigate away from current
+            if (CurrentPage is not null)
+            {
+                try { await CurrentPage.OnNavigatedFromAsync(); }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Nav] OnNavigatedFromAsync error: {ex}"); }
+            }
 
-        SelectedNavItem = item;
-        var page = (PageViewModelBase)_serviceProvider.GetService(item.ViewModelType)!;
-        CurrentPage = page;
-        await page.OnNavigatedToAsync();
+            SelectedNavItem = item;
+            var page = _serviceProvider.GetService(item.ViewModelType) as PageViewModelBase;
+            if (page is null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Nav] Failed to resolve ViewModel: {item.ViewModelType.Name}");
+                return;
+            }
+            CurrentPage = page;
+
+            try { await page.OnNavigatedToAsync(); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Nav] OnNavigatedToAsync error for {item.Title}: {ex}"); }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Nav] NavigateTo error: {ex}");
+        }
     }
 
     /// <summary>
