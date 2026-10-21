@@ -22,13 +22,13 @@ public partial class PlayView : UserControl
             vm.Board.PromptPromotion = (color) =>
             {
                 var parentWindow = Window.GetWindow(this);
-                var dlg = new PromotionDialog();
+                var dlg = new PromotionDialog(color);
                 if (parentWindow != null)
                 {
                     dlg.Owner = parentWindow;
                 }
-                dlg.ShowDialog();
-                return dlg.SelectedPieceType;
+                var result = dlg.ShowDialog();
+                return result == true ? dlg.SelectedPieceType : null;
             };
         }
     }

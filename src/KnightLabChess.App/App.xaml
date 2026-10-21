@@ -17,6 +17,9 @@
             <converters:PercentageConverter x:Key="PercentageConverter" />
             <converters:FeedbackColorConverter x:Key="FeedbackColorConverter" />
             <converters:GeometryKeyConverter x:Key="GeometryKeyConverter" />
+            <converters:DrawingKeyConverter x:Key="DrawingKeyConverter" />
+            <converters:BoardCoordinateBrushConverter x:Key="BoardCoordinateBrushConverter" />
+            <converters:EqualityToBooleanConverter x:Key="EqualityToBooleanConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

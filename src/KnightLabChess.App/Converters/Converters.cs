@@ -33,9 +33,26 @@ public class BoolToVisibilityConverter : IValueConverter
 /// </summary>
 public class SquareBackgroundConverter : IMultiValueConverter
 {
+    private static readonly SolidColorBrush LightSquareBrush = new(Color.FromRgb(240, 217, 181));
+    private static readonly SolidColorBrush DarkSquareBrush = new(Color.FromRgb(181, 136, 99));
+    private static readonly SolidColorBrush SelectedBrush = new(Color.FromArgb(200, 247, 236, 105));
+    private static readonly SolidColorBrush LastMoveLightBrush = new(Color.FromRgb(205, 210, 106));
+    private static readonly SolidColorBrush LastMoveDarkBrush = new(Color.FromRgb(170, 162, 58));
+    private static readonly SolidColorBrush CheckBrush = new(Color.FromArgb(215, 229, 57, 53));
+
+    static SquareBackgroundConverter()
+    {
+        LightSquareBrush.Freeze();
+        DarkSquareBrush.Freeze();
+        SelectedBrush.Freeze();
+        LastMoveLightBrush.Freeze();
+        LastMoveDarkBrush.Freeze();
+        CheckBrush.Freeze();
+    }
+
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values.Length < 5) return Brushes.Gray;
+        if (values.Length < 5) return LightSquareBrush;
 
         bool isLight = values[0] is bool light && light;
         bool isSelected = values[1] is bool sel && sel;
@@ -44,30 +61,63 @@ public class SquareBackgroundConverter : IMultiValueConverter
         bool isCheck = values[4] is bool chk && chk;
 
         if (isCheck)
-            return new SolidColorBrush(Color.FromArgb(200, 229, 57, 53));
+            return CheckBrush;
 
         if (isSelected)
-            return new SolidColorBrush(Color.FromArgb(180, 255, 255, 0));
+            return SelectedBrush;
 
         if (isLastMoveFrom || isLastMoveTo)
-        {
-            var baseColor = isLight
-                ? Color.FromRgb(232, 213, 181)
-                : Color.FromRgb(181, 136, 99);
+            return isLight ? LastMoveLightBrush : LastMoveDarkBrush;
 
-            // Blend with yellow highlight
-            return new SolidColorBrush(Color.FromArgb(255,
-                (byte)((baseColor.R * 0.6) + (205 * 0.4)),
-                (byte)((baseColor.G * 0.6) + (210 * 0.4)),
-                (byte)((baseColor.B * 0.6) + (100 * 0.4))));
-        }
-
-        return new SolidColorBrush(isLight
-            ? Color.FromRgb(232, 213, 181)
-            : Color.FromRgb(181, 136, 99));
+        return isLight ? LightSquareBrush : DarkSquareBrush;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Resolves a resource key string to a DrawingImage or ImageSource.
+/// </summary>
+public class DrawingKeyConverter : IValueConverter
+{
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string key && Application.Current != null)
+        {
+            var res = Application.Current.TryFindResource(key);
+            if (res is DrawingImage drawingImage) return drawingImage;
+            if (res is Drawing drawing) return new DrawingImage(drawing);
+            if (res is ImageSource imageSource) return imageSource;
+        }
+        return null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Provides contrasting text brush for rank/file board coordinates.
+/// </summary>
+public class BoardCoordinateBrushConverter : IValueConverter
+{
+    private static readonly SolidColorBrush DarkCoordBrush = new(Color.FromRgb(181, 136, 99));
+    private static readonly SolidColorBrush LightCoordBrush = new(Color.FromRgb(240, 217, 181));
+
+    static BoardCoordinateBrushConverter()
+    {
+        DarkCoordBrush.Freeze();
+        LightCoordBrush.Freeze();
+    }
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        bool isLight = value is bool b && b;
+        return isLight ? DarkCoordBrush : LightCoordBrush;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
 

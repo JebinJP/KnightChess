@@ -9,17 +9,26 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="20">
         <Grid.ColumnDefinitions>
+            <!-- Left Area: Board & Player Status -->
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="340" />
+            <!-- Right Area: Match Configuration & Move History -->
+            <ColumnDefinition Width="360" />
         </Grid.ColumnDefinitions>
 
         <!-- Left Arena: Chess Board & Status Panels -->
-        <Grid Grid.Column="0" Margin="0,0,24,0">
+        <Grid Grid.Column="0" Margin="0,0,20,0">
             <Grid.RowDefinitions>
+                <!-- Row 0: Top Game Status / Turn Header Banner -->
                 <RowDefinition Height="Auto" />
+                <!-- Row 1: Top Player Profile & Captured Pieces Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- Row 2: Chess Board Viewbox (Square, Centered, Perfectly Stable) -->
                 <RowDefinition Height="*" />
+                <!-- Row 3: Bottom Player Profile & Captured Pieces Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- Row 4: Notification Banner -->
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -29,8 +38,8 @@
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="16,12"
-                    Margin="0,0,0,16">
+                    Padding="16,10"
+                    Margin="0,0,0,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -93,60 +102,170 @@
                 </Grid>
             </Border>
 
-            <!-- Board Center Area -->
-            <Viewbox Grid.Row="1" MaxHeight="600" MaxWidth="560" Stretch="Uniform">
-                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+            <!-- Top Player Bar (Above the board, outside Viewbox) -->
+            <Border Grid.Row="1"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,6"
+                    Margin="0,0,0,6"
+                    Height="42">
+                <DockPanel LastChildFill="True">
+                    <!-- Left: Player Info -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource BackgroundDarkBrush}"
+                                CornerRadius="6"
+                                Width="28" Height="28"
+                                Margin="0,0,8,0">
+                            <TextBlock Text="{Binding TopPlayerIcon}"
+                                       FontSize="15"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TopPlayerName}"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding TopPlayerSubtext}"
+                                       FontSize="10"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                        </StackPanel>
+                        <!-- Active Turn Indicator -->
+                        <Border Background="{StaticResource AccentBrush}"
+                                Width="8" Height="8"
+                                CornerRadius="4"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsTopPlayerActiveTurn, Converter={StaticResource BoolToVis}}"
+                                ToolTip="To move" />
+                    </StackPanel>
 
-                    <!-- Black Captured Tray (top) -->
-                    <ItemsControl Grid.Row="0"
-                                  ItemsSource="{Binding Board.CapturedBlackPieces}"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,8">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <!-- Right: Captured pieces & material score -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <ItemsControl ItemsSource="{Binding Board.TopCapturedPieces}"
+                                      VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="16"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Margin="1,0" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Background="{StaticResource SurfaceHoverBrush}"
+                                CornerRadius="4"
+                                Padding="5,2"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding Board.TopMaterialAdvantage, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding Board.TopMaterialAdvantage}"
+                                       FontWeight="Bold"
+                                       FontSize="10"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </Border>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
 
-                    <!-- Interactive Chessboard -->
-                    <controls:ChessBoardControl Grid.Row="1" DataContext="{Binding Board}" />
-
-                    <!-- White Captured Tray (bottom) -->
-                    <ItemsControl Grid.Row="2"
-                                  ItemsSource="{Binding Board.CapturedWhitePieces}"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,8,0,0">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="20" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
+            <!-- Board Center Area (Isolated Viewbox: 100% square aspect ratio, permanently stable on capture) -->
+            <Viewbox Grid.Row="2"
+                     Stretch="Uniform"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     MaxWidth="600"
+                     MaxHeight="600">
+                <controls:ChessBoardControl DataContext="{Binding Board}" />
             </Viewbox>
 
+            <!-- Bottom Player Bar (Below the board, outside Viewbox) -->
+            <Border Grid.Row="3"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,6"
+                    Margin="0,6,0,0"
+                    Height="42">
+                <DockPanel LastChildFill="True">
+                    <!-- Left: Player Info -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource BackgroundDarkBrush}"
+                                CornerRadius="6"
+                                Width="28" Height="28"
+                                Margin="0,0,8,0">
+                            <TextBlock Text="{Binding BottomPlayerIcon}"
+                                       FontSize="15"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding BottomPlayerName}"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding BottomPlayerSubtext}"
+                                       FontSize="10"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                        </StackPanel>
+                        <!-- Active Turn Indicator -->
+                        <Border Background="{StaticResource AccentBrush}"
+                                Width="8" Height="8"
+                                CornerRadius="4"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsBottomPlayerActiveTurn, Converter={StaticResource BoolToVis}}"
+                                ToolTip="To move" />
+                    </StackPanel>
+
+                    <!-- Right: Captured pieces & material score -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <ItemsControl ItemsSource="{Binding Board.BottomCapturedPieces}"
+                                      VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="16"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Margin="1,0" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Background="{StaticResource SurfaceHoverBrush}"
+                                CornerRadius="4"
+                                Padding="5,2"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding Board.BottomMaterialAdvantage, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding Board.BottomMaterialAdvantage}"
+                                       FontWeight="Bold"
+                                       FontSize="10"
+                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                        </Border>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
             <!-- Notification Banner -->
-            <Border Grid.Row="2"
+            <Border Grid.Row="4"
                     Background="{StaticResource AccentDarkBrush}"
                     CornerRadius="6"
                     Padding="14,8"
-                    Margin="0,16,0,0"
+                    Margin="0,10,0,0"
                     Visibility="{Binding HasNotification, Converter={StaticResource BoolToVis}}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right"
@@ -173,47 +292,359 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Game Actions Panel -->
+            <!-- Match Configuration & Actions Panel -->
             <Border Grid.Row="0"
                     Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="16"
-                    Margin="0,0,0,16">
+                    Margin="0,0,0,14">
                 <StackPanel>
                     <TextBlock Text="Match Configuration"
                                Style="{StaticResource H3TextStyle}"
                                Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="0,0,0,10" />
+                               Margin="0,0,0,12" />
 
-                    <!-- Game Mode Selector -->
-                    <TextBlock Text="MODE"
+                    <!-- Game Mode Label -->
+                    <TextBlock Text="GAME MODE"
                                Style="{StaticResource CaptionTextStyle}"
                                Foreground="{StaticResource TextMutedBrush}"
-                               Margin="0,0,0,4" />
-                    <ComboBox ItemsSource="{Binding GameModes}"
-                              SelectedItem="{Binding SelectedMode}"
-                              Padding="8,5"
-                              Margin="0,0,0,10"
-                              Background="{StaticResource BackgroundDarkBrush}"
-                              Foreground="{StaticResource TextPrimaryBrush}"
-                              BorderBrush="{StaticResource BorderBrush}" />
+                               Margin="0,0,0,6" />
+
+                    <!-- Modern Game Mode Selection Cards -->
+                    <!-- Card 1: Pass & Play -->
+                    <Button Style="{x:Null}"
+                            Command="{Binding SetPassAndPlayModeCommand}"
+                            Cursor="Hand"
+                            Margin="0,0,0,6"
+                            BorderThickness="0"
+                            Padding="0"
+                            Background="Transparent">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="modeCard"
+                                        CornerRadius="8"
+                                        Padding="12,10"
+                                        BorderThickness="1.5">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHumanVsHuman}" Value="True">
+                                                    <Setter Property="Background" Value="#224CAF50" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SurfaceBrush}"
+                                                CornerRadius="6"
+                                                Width="32" Height="32"
+                                                Margin="0,0,10,0">
+                                            <TextBlock Text="👥" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Pass &amp; Play"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="Play locally with a friend on this device"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <!-- Selected checkmark badge -->
+                                        <Border Grid.Column="2"
+                                                CornerRadius="10"
+                                                Width="20" Height="20"
+                                                Background="{StaticResource AccentBrush}"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding IsHumanVsHuman, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="✓" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- Card 2: Play Computer -->
+                    <Button Style="{x:Null}"
+                            Command="{Binding SetComputerModeCommand}"
+                            Cursor="Hand"
+                            Margin="0,0,0,10"
+                            BorderThickness="0"
+                            Padding="0"
+                            Background="Transparent">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="modeCard"
+                                        CornerRadius="8"
+                                        Padding="12,10"
+                                        BorderThickness="1.5">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHumanVsComputer}" Value="True">
+                                                    <Setter Property="Background" Value="#224CAF50" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SurfaceBrush}"
+                                                CornerRadius="6"
+                                                Width="32" Height="32"
+                                                Margin="0,0,10,0">
+                                            <TextBlock Text="🤖" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Play Computer"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="Challenge the built-in Stockfish engine"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <!-- Selected checkmark badge -->
+                                        <Border Grid.Column="2"
+                                                CornerRadius="10"
+                                                Width="20" Height="20"
+                                                Background="{StaticResource AccentBrush}"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding IsHumanVsComputer, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="✓" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
                     <!-- Computer Options Panel (shown only when vs Computer) -->
                     <StackPanel Visibility="{Binding IsComputerMode, Converter={StaticResource BoolToVis}}"
-                                Margin="0,0,0,6">
+                                Margin="0,0,0,10">
+                        <!-- Play As Color Selector -->
+                        <TextBlock Text="PLAY AS"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,6" />
+
+                        <UniformGrid Columns="2" Margin="0,0,0,10">
+                            <!-- Play as White -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetWhiteColorCommand}"
+                                    Cursor="Hand"
+                                    Margin="0,0,4,0"
+                                    BorderThickness="0"
+                                    Padding="0"
+                                    Background="Transparent">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="8,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHumanWhite}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="♔" FontSize="18" Foreground="#FFF8F0" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="White" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Play as Black -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetBlackColorCommand}"
+                                    Cursor="Hand"
+                                    Margin="4,0,0,0"
+                                    BorderThickness="0"
+                                    Padding="0"
+                                    Background="Transparent">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="8,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHumanBlack}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="♚" FontSize="18" Foreground="#FFCCCCCC" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Black" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </UniformGrid>
+
+                        <!-- Difficulty Preset Selector -->
                         <TextBlock Text="DIFFICULTY PRESET"
                                    Style="{StaticResource CaptionTextStyle}"
                                    Foreground="{StaticResource TextMutedBrush}"
-                                   Margin="0,0,0,4" />
-                        <ComboBox ItemsSource="{Binding Difficulties}"
-                                  SelectedItem="{Binding SelectedDifficulty}"
-                                  Padding="8,5"
-                                  Margin="0,0,0,10"
-                                  Background="{StaticResource BackgroundDarkBrush}"
-                                  Foreground="{StaticResource TextPrimaryBrush}"
-                                  BorderBrush="{StaticResource BorderBrush}" />
+                                   Margin="0,0,0,6" />
+
+                        <UniformGrid Columns="4" Margin="0,0,0,6">
+                            <!-- Casual -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetCasualDifficultyCommand}"
+                                    Cursor="Hand"
+                                    Margin="0,0,2,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="4,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCasualDifficulty}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Casual" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="1000" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Intermediate -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetIntermediateDifficultyCommand}"
+                                    Cursor="Hand"
+                                    Margin="2,0,2,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="4,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsIntermediateDifficulty}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Interm." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="1400" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Advanced -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetAdvancedDifficultyCommand}"
+                                    Cursor="Hand"
+                                    Margin="2,0,2,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="4,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAdvancedDifficulty}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Adv." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="1800" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Master -->
+                            <Button Style="{x:Null}"
+                                    Command="{Binding SetMasterDifficultyCommand}"
+                                    Cursor="Hand"
+                                    Margin="2,0,0,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Padding="4,8" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BackgroundDarkBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMasterDifficulty}" Value="True">
+                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Master" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="2400+" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </UniformGrid>
                     </StackPanel>
 
                     <Separator Background="{StaticResource BorderBrush}" Margin="0,2,0,10" />
@@ -245,7 +676,7 @@
                                 Margin="4,0,0,0" />
                     </UniformGrid>
 
-                    <Separator Background="{StaticResource BorderBrush}" Margin="0,6,0,12" />
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,4,0,10" />
 
                     <!-- Persistence Buttons -->
                     <UniformGrid Columns="2">

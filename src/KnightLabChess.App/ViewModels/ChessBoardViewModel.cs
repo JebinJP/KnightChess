@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Chess;
 using KnightLabChess.Core.Models;
 
@@ -23,6 +24,10 @@ public partial class BoardSquareViewModel : ObservableObject
     [ObservableProperty] private bool _hasPiece;
     [ObservableProperty] private bool _isWhitePiece;
     [ObservableProperty] private string? _pieceKey;
+    [ObservableProperty] private string? _rankLabel;
+    [ObservableProperty] private string? _fileLabel;
+    [ObservableProperty] private bool _hasRankLabel;
+    [ObservableProperty] private bool _hasFileLabel;
 
     public string SquareName => $"{(char)('a' + File)}{Rank + 1}";
 }
@@ -40,12 +45,14 @@ public partial class MoveHistoryItem : ObservableObject
 
 /// <summary>
 /// Core chess board ViewModel — manages visual board state, move execution, legal move highlights,
-/// turn management, draw claims, and full game state synchronization.
+/// turn management, draw claims, audio effects, and full game state synchronization.
 /// Reusable across Play, Analysis, and Lesson views.
 /// </summary>
 public partial class ChessBoardViewModel : ObservableObject
 {
     private IChessGame _game;
+    private readonly IAudioService? _audioService;
+    private bool _isHandlingMove;
 
     [ObservableProperty] private ObservableCollection<BoardSquareViewModel> _squares = [];
     [ObservableProperty] private ObservableCollection<MoveHistoryItem> _moveHistory = [];
@@ -61,7 +68,14 @@ public partial class ChessBoardViewModel : ObservableObject
     [ObservableProperty] private string? _claimableDrawText;
     [ObservableProperty] private ObservableCollection<string> _capturedWhitePieces = [];
     [ObservableProperty] private ObservableCollection<string> _capturedBlackPieces = [];
+    [ObservableProperty] private ObservableCollection<string> _topCapturedPieces = [];
+    [ObservableProperty] private ObservableCollection<string> _bottomCapturedPieces = [];
+    [ObservableProperty] private string _topMaterialAdvantage = string.Empty;
+    [ObservableProperty] private string _bottomMaterialAdvantage = string.Empty;
+    [ObservableProperty] private int _whiteMaterialScore;
+    [ObservableProperty] private int _blackMaterialScore;
     [ObservableProperty] private bool _isInputDisabled;
+    [ObservableProperty] private bool _isAudioMuted;
     [ObservableProperty] private IReadOnlyList<string>? _allowedMoves;
 
     /// <summary>
@@ -76,22 +90,32 @@ public partial class ChessBoardViewModel : ObservableObject
 
     /// <summary>
     /// Function to prompt user for promotion piece when pawn reaches 8th/1st rank.
-    /// Returns the selected PieceType.
+    /// Returns the selected PieceType, or null if cancelled/dismissed.
     /// </summary>
-    public Func<PieceColor, PieceType>? PromptPromotion { get; set; }
+    public Func<PieceColor, PieceType?>? PromptPromotion { get; set; }
 
-    public ChessBoardViewModel() : this(new GeraChessGameAdapter())
+    public ChessBoardViewModel() : this(new GeraChessGameAdapter(), null)
     {
     }
 
-    public ChessBoardViewModel(IChessGame game)
+    public ChessBoardViewModel(IChessGame game) : this(game, null)
+    {
+    }
+
+    public ChessBoardViewModel(IAudioService? audioService) : this(new GeraChessGameAdapter(), audioService)
+    {
+    }
+
+    public ChessBoardViewModel(IChessGame game, IAudioService? audioService)
     {
         _game = game;
+        _audioService = audioService;
         InitializeSquares();
         UpdateBoardDisplay();
     }
 
     public IChessGame Game => _game;
+    public IAudioService? AudioService => _audioService;
 
     private void InitializeSquares()
     {
@@ -132,6 +156,10 @@ public partial class ChessBoardViewModel : ObservableObject
     public void FlipBoard()
     {
         IsFlipped = !IsFlipped;
+    }
+
+    partial void OnIsFlippedChanged(bool value)
+    {
         UpdateBoardDisplay();
     }
 
@@ -184,7 +212,7 @@ public partial class ChessBoardViewModel : ObservableObject
     [RelayCommand]
     public void SelectSquare(BoardSquareViewModel square)
     {
-        if (IsInputDisabled || IsGameOver) return;
+        if (_isHandlingMove || IsInputDisabled || IsGameOver) return;
 
         // If no square currently selected
         if (SelectedSquare is null)
@@ -217,33 +245,71 @@ public partial class ChessBoardViewModel : ObservableObject
         }
 
         // Attempting to move from SelectedSquare to clicked square
-        var from = new BoardSquare(SelectedSquare.File, SelectedSquare.Rank);
-        var to = new BoardSquare(square.File, square.Rank);
-
-        // Check if move is a pawn promotion
-        PieceType? promo = null;
-        var piece = _game.GetPieceAt(from);
-        if (piece?.Type == PieceType.Pawn && (to.Rank == 7 || to.Rank == 0))
+        _isHandlingMove = true;
+        try
         {
-            promo = PromptPromotion is not null
-                ? PromptPromotion(piece.Color)
-                : PieceType.Queen;
-        }
+            var from = new BoardSquare(SelectedSquare.File, SelectedSquare.Rank);
+            var to = new BoardSquare(square.File, square.Rank);
 
-        if (_game.IsLegalMove(from, to, promo))
-        {
-            var moveResult = _game.MakeMove(from, to, promo);
-            ClearSelection();
-
-            if (moveResult.Success)
+            // 1. Verify if this move is a legal pawn promotion move
+            if (_game.IsPromotionMove(from, to))
             {
-                UpdateBoardDisplay();
-                MoveMade?.Invoke(this, moveResult.Move!.San);
+                var piece = _game.GetPieceAt(from);
+                var color = piece?.Color ?? _game.ActiveTurn;
+
+                // Prompt user for promotion piece
+                var promo = PromptPromotion is not null
+                    ? PromptPromotion(color)
+                    : PieceType.Queen;
+
+                // If user cancelled or dismissed the dialog, cancel move and preserve board state
+                if (!promo.HasValue)
+                {
+                    ClearSelection();
+                    return;
+                }
+
+                if (_game.IsLegalMove(from, to, promo.Value))
+                {
+                    var moveResult = _game.MakeMove(from, to, promo.Value);
+                    ClearSelection();
+
+                    if (moveResult.Success)
+                    {
+                        UpdateBoardDisplay();
+                        PlayAudioForMove(moveResult);
+                        MoveMade?.Invoke(this, moveResult.Move!.San);
+                    }
+                }
+                else
+                {
+                    ClearSelection();
+                }
+                return;
+            }
+
+            // 2. Standard (non-promotion) move validation and execution
+            if (_game.IsLegalMove(from, to))
+            {
+                var moveResult = _game.MakeMove(from, to);
+                ClearSelection();
+
+                if (moveResult.Success)
+                {
+                    UpdateBoardDisplay();
+                    PlayAudioForMove(moveResult);
+                    MoveMade?.Invoke(this, moveResult.Move!.San);
+                }
+            }
+            else
+            {
+                // Reject illegal move cleanly without mutating board or opening dialogs
+                ClearSelection();
             }
         }
-        else
+        finally
         {
-            ClearSelection();
+            _isHandlingMove = false;
         }
     }
 
@@ -281,11 +347,53 @@ public partial class ChessBoardViewModel : ObservableObject
         {
             ClearSelection();
             UpdateBoardDisplay();
+            PlayAudioForMove(moveResult);
             MoveMade?.Invoke(this, moveResult.Move?.San ?? moveText);
             return true;
         }
 
         return false;
+    }
+
+    private void PlayAudioForMove(MoveResult moveResult)
+    {
+        if (_audioService is null || IsAudioMuted) return;
+
+        try
+        {
+            if (moveResult.IsCheckmate)
+            {
+                _audioService.Play(ChessSound.Checkmate);
+            }
+            else if (moveResult.IsCheck)
+            {
+                _audioService.Play(ChessSound.Check);
+            }
+            else if (moveResult.Move?.IsCastling == true)
+            {
+                _audioService.Play(ChessSound.Castle);
+            }
+            else if (moveResult.Move?.IsPromotion == true)
+            {
+                _audioService.Play(ChessSound.Promote);
+            }
+            else if (moveResult.Move?.CapturedPiece != null || moveResult.Move?.IsEnPassant == true)
+            {
+                _audioService.Play(ChessSound.Capture);
+            }
+            else if (moveResult.IsGameOver)
+            {
+                _audioService.Play(ChessSound.GameOver);
+            }
+            else
+            {
+                _audioService.Play(ChessSound.Move);
+            }
+        }
+        catch
+        {
+            // Fail safely without throwing
+        }
     }
 
     /// <summary>
@@ -373,13 +481,15 @@ public partial class ChessBoardViewModel : ObservableObject
         }
 
         // Update piece positions based on board orientation
+        // Non-flipped (default): White on bottom (Rank 0 at bottom, Rank 7 at top), File a on left.
+        // Flipped: Black on bottom (Rank 7 at bottom, Rank 0 at top), File h on left.
         for (int rank = 0; rank < 8; rank++)
         {
             for (int file = 0; file < 8; file++)
             {
-                int displayRank = IsFlipped ? rank : (7 - rank);
-                int displayFile = IsFlipped ? (7 - file) : file;
-                int index = (7 - displayRank) * 8 + displayFile;
+                int gridRow = IsFlipped ? rank : (7 - rank);
+                int gridCol = IsFlipped ? (7 - file) : file;
+                int index = gridRow * 8 + gridCol;
 
                 if (index < 0 || index >= Squares.Count) continue;
 
@@ -388,12 +498,36 @@ public partial class ChessBoardViewModel : ObservableObject
                 sq.Rank = rank;
                 sq.IsLightSquare = (file + rank) % 2 != 0;
 
+                // Rank label on leftmost column of board
+                if (gridCol == 0)
+                {
+                    sq.RankLabel = (rank + 1).ToString();
+                    sq.HasRankLabel = true;
+                }
+                else
+                {
+                    sq.RankLabel = null;
+                    sq.HasRankLabel = false;
+                }
+
+                // File label on bottom row of board
+                if (gridRow == 7)
+                {
+                    sq.FileLabel = ((char)('a' + file)).ToString();
+                    sq.HasFileLabel = true;
+                }
+                else
+                {
+                    sq.FileLabel = null;
+                    sq.HasFileLabel = false;
+                }
+
                 var piece = _game.GetPieceAt(file, rank);
                 if (piece is not null)
                 {
                     sq.HasPiece = true;
                     sq.IsWhitePiece = piece.Color == PieceColor.White;
-                    sq.PieceKey = $"{(piece.Color == PieceColor.White ? "White" : "Black")}{piece.Type}Geometry";
+                    sq.PieceKey = $"{(piece.Color == PieceColor.White ? "White" : "Black")}{piece.Type}Drawing";
                     sq.PieceSymbol = piece.Symbol;
                 }
                 else
@@ -466,17 +600,76 @@ public partial class ChessBoardViewModel : ObservableObject
     {
         CapturedWhitePieces.Clear();
         CapturedBlackPieces.Clear();
+        TopCapturedPieces.Clear();
+        BottomCapturedPieces.Clear();
+
+        int whiteMaterial = 0;
+        int blackMaterial = 0;
+
+        for (int r = 0; r < 8; r++)
+        {
+            for (int f = 0; f < 8; f++)
+            {
+                var piece = _game.GetPieceAt(f, r);
+                if (piece != null)
+                {
+                    int val = piece.Type switch
+                    {
+                        PieceType.Pawn => 1,
+                        PieceType.Knight => 3,
+                        PieceType.Bishop => 3,
+                        PieceType.Rook => 5,
+                        PieceType.Queen => 9,
+                        _ => 0
+                    };
+                    if (piece.Color == PieceColor.White)
+                        whiteMaterial += val;
+                    else
+                        blackMaterial += val;
+                }
+            }
+        }
+
+        WhiteMaterialScore = whiteMaterial;
+        BlackMaterialScore = blackMaterial;
+
+        var whiteCaptured = new List<string>();
+        var blackCaptured = new List<string>();
 
         foreach (var move in _game.MoveHistory)
         {
             if (move.CapturedPiece is not null)
             {
                 if (move.CapturedPiece.Color == PieceColor.White)
+                {
                     CapturedWhitePieces.Add(move.CapturedPiece.Symbol);
+                    whiteCaptured.Add(move.CapturedPiece.Symbol);
+                }
                 else
+                {
                     CapturedBlackPieces.Add(move.CapturedPiece.Symbol);
+                    blackCaptured.Add(move.CapturedPiece.Symbol);
+                }
             }
         }
+
+        // When IsFlipped is false: White is bottom, Black is top.
+        // Bottom player (White) has captured Black pieces (blackCaptured).
+        // Top player (Black) has captured White pieces (whiteCaptured).
+        var topPieces = IsFlipped ? blackCaptured : whiteCaptured;
+        var bottomPieces = IsFlipped ? whiteCaptured : blackCaptured;
+
+        foreach (var sym in topPieces) TopCapturedPieces.Add(sym);
+        foreach (var sym in bottomPieces) BottomCapturedPieces.Add(sym);
+
+        int whiteDiff = whiteMaterial - blackMaterial;
+        int blackDiff = blackMaterial - whiteMaterial;
+
+        int topDiff = IsFlipped ? whiteDiff : blackDiff;
+        int bottomDiff = IsFlipped ? blackDiff : whiteDiff;
+
+        TopMaterialAdvantage = topDiff > 0 ? $"+{topDiff}" : string.Empty;
+        BottomMaterialAdvantage = bottomDiff > 0 ? $"+{bottomDiff}" : string.Empty;
     }
 
     private void UpdateStatusText()

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Chess;
 using KnightLabChess.Core.Progress;
 using KnightLabChess.Core.Puzzles;
@@ -32,13 +33,16 @@ public partial class PuzzlesViewModel : PageViewModelBase
     [ObservableProperty] private bool _showExplanation;
     [ObservableProperty] private string? _explanationText;
 
+    private readonly IAudioService? _audioService;
+
     public PuzzleDifficulty[] Difficulties { get; } = Enum.GetValues<PuzzleDifficulty>();
 
-    public PuzzlesViewModel(IPuzzleService puzzleService, IProgressService progressService)
+    public PuzzlesViewModel(IPuzzleService puzzleService, IProgressService progressService, IAudioService? audioService = null)
     {
         _puzzleService = puzzleService;
         _progressService = progressService;
-        _board = new ChessBoardViewModel();
+        _audioService = audioService;
+        _board = new ChessBoardViewModel(audioService);
         PageTitle = "Puzzles";
         PageIcon = "🧩";
 

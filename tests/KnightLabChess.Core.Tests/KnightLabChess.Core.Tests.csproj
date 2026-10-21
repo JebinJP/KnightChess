@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\KnightLabChess.Core\KnightLabChess.Core.csproj" />
+    <ProjectReference Include="..\..\src\KnightLabChess.App\KnightLabChess.App.csproj" />
   </ItemGroup>
 
 </Project>

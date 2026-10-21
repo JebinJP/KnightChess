@@ -7,7 +7,8 @@
         ResizeMode="NoResize"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="Transparent">
+        Background="Transparent"
+        KeyDown="Window_KeyDown">
 
     <Border Background="{StaticResource SurfaceBrush}"
             BorderBrush="{StaticResource AccentBrush}"
@@ -20,13 +21,24 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Title -->
-            <TextBlock Grid.Row="0"
-                       Text="Promote Pawn"
-                       Style="{StaticResource H2TextStyle}"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,16" />
+            <!-- Title Bar with Close Button -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="Promote Pawn"
+                           Style="{StaticResource H2TextStyle}"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+                <Button HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Click="Cancel_Click"
+                        Width="28" Height="28"
+                        Cursor="Hand"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip="Cancel (Esc)">
+                    <TextBlock Text="✕" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </Grid>
 
             <!-- Piece Options -->
             <UniformGrid Grid.Row="1" Columns="4" Margin="0,5">
@@ -35,7 +47,7 @@
                         Style="{StaticResource PrimaryButtonStyle}"
                         Click="Queen_Click"
                         ToolTip="Promote to Queen">
-                    <TextBlock Text="♛" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock x:Name="QueenGlyph" Text="♛" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
 
                 <!-- Rook -->
@@ -43,7 +55,7 @@
                         Style="{StaticResource SecondaryButtonStyle}"
                         Click="Rook_Click"
                         ToolTip="Promote to Rook">
-                    <TextBlock Text="♜" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RookGlyph" Text="♜" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
 
                 <!-- Bishop -->
@@ -51,7 +63,7 @@
                         Style="{StaticResource SecondaryButtonStyle}"
                         Click="Bishop_Click"
                         ToolTip="Promote to Bishop">
-                    <TextBlock Text="♝" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock x:Name="BishopGlyph" Text="♝" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
 
                 <!-- Knight -->
@@ -59,7 +71,7 @@
                         Style="{StaticResource SecondaryButtonStyle}"
                         Click="Knight_Click"
                         ToolTip="Promote to Knight">
-                    <TextBlock Text="♞" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock x:Name="KnightGlyph" Text="♞" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
             </UniformGrid>
         </Grid>

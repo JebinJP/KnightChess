@@ -52,32 +52,33 @@
                                             </Border.Background>
                                         </Border>
 
-                                        <!-- Piece Representation -->
-                                        <Viewbox Margin="5"
-                                                 Visibility="{Binding HasPiece, Converter={StaticResource BoolToVis}}"
-                                                 IsHitTestVisible="False">
-                                            <Path Data="{Binding PieceKey, Converter={StaticResource GeometryKeyConverter}}"
-                                                  Stretch="Uniform">
-                                                <Path.Style>
-                                                    <Style TargetType="Path">
-                                                        <Setter Property="Fill" Value="#FFF8F0" />
-                                                        <Setter Property="Stroke" Value="#FF1E1E1E" />
-                                                        <Setter Property="StrokeThickness" Value="1.4" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsWhitePiece}" Value="False">
-                                                                <Setter Property="Fill" Value="#FF222222" />
-                                                                <Setter Property="Stroke" Value="#FFE8E8E8" />
-                                                                <Setter Property="StrokeThickness" Value="1.4" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Path.Style>
-                                            </Path>
-                                        </Viewbox>
+                                        <!-- Board Coordinates: Rank (top-left) -->
+                                        <TextBlock Text="{Binding RankLabel}"
+                                                   Visibility="{Binding HasRankLabel, Converter={StaticResource BoolToVis}}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   FontFamily="{StaticResource PrimaryFont}"
+                                                   Foreground="{Binding IsLightSquare, Converter={StaticResource BoardCoordinateBrushConverter}}"
+                                                   Margin="3,2,0,0"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top"
+                                                   IsHitTestVisible="False" />
 
-                                        <!-- Quiet Legal Move Indicator (Center translucent circle) -->
-                                        <Ellipse Width="16" Height="16"
-                                                 Fill="#40000000"
+                                        <!-- Board Coordinates: File (bottom-right) -->
+                                        <TextBlock Text="{Binding FileLabel}"
+                                                   Visibility="{Binding HasFileLabel, Converter={StaticResource BoolToVis}}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   FontFamily="{StaticResource PrimaryFont}"
+                                                   Foreground="{Binding IsLightSquare, Converter={StaticResource BoardCoordinateBrushConverter}}"
+                                                   Margin="0,0,3,1"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Bottom"
+                                                   IsHitTestVisible="False" />
+
+                                        <!-- Quiet Legal Move Indicator (Center translucent dot) -->
+                                        <Ellipse Width="18" Height="18"
+                                                 Fill="#38000000"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center"
                                                  IsHitTestVisible="False">
@@ -97,14 +98,15 @@
                                             </Ellipse.Style>
                                         </Ellipse>
 
-                                        <!-- Capture Legal Move Indicator (Corner brackets / ring around enemy piece) -->
-                                        <Border BorderBrush="#90E53935"
-                                                BorderThickness="3"
-                                                CornerRadius="6"
-                                                Margin="2"
-                                                IsHitTestVisible="False">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
+                                        <!-- Capture Legal Move Target Ring (Refined concentric circular frame) -->
+                                        <Ellipse Width="54" Height="54"
+                                                 Stroke="#45000000"
+                                                 StrokeThickness="5"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 IsHitTestVisible="False">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
                                                     <Setter Property="Visibility" Value="Collapsed" />
                                                     <Style.Triggers>
                                                         <MultiDataTrigger>
@@ -116,11 +118,19 @@
                                                         </MultiDataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </Border.Style>
-                                        </Border>
+                                            </Ellipse.Style>
+                                        </Ellipse>
 
-                                        <!-- Selected Square Border -->
-                                        <Border BorderBrush="#FFFDD835"
+                                        <!-- Piece Representation (High Quality Vector DrawingImage) -->
+                                        <Image Source="{Binding PieceKey, Converter={StaticResource DrawingKeyConverter}}"
+                                               Stretch="Uniform"
+                                               Margin="4"
+                                               Visibility="{Binding HasPiece, Converter={StaticResource BoolToVis}}"
+                                               IsHitTestVisible="False"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+
+                                        <!-- Selected Square Highlight Border -->
+                                        <Border BorderBrush="{StaticResource AccentBrush}"
                                                 BorderThickness="2"
                                                 Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}"
                                                 IsHitTestVisible="False" />

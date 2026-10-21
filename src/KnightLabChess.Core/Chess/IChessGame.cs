@@ -30,6 +30,7 @@ public interface IChessGame
 
     IReadOnlyList<BoardSquare> GetLegalDestinations(BoardSquare from);
     bool IsLegalMove(BoardSquare from, BoardSquare to, PieceType? promotion = null);
+    bool IsPromotionMove(BoardSquare from, BoardSquare to);
 
     MoveResult MakeMove(BoardSquare from, BoardSquare to, PieceType? promotion = null);
     MoveResult MakeMove(string moveString);

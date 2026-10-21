@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using KnightLabChess.Core.Models;
 
 namespace KnightLabChess.App.Views.Dialogs;
@@ -10,9 +11,47 @@ public partial class PromotionDialog : Window
 {
     public PieceType SelectedPieceType { get; private set; } = PieceType.Queen;
 
-    public PromotionDialog()
+    public PromotionDialog() : this(PieceColor.White)
+    {
+    }
+
+    public PromotionDialog(PieceColor color)
     {
         InitializeComponent();
+        SetPieceColor(color);
+    }
+
+    public void SetPieceColor(PieceColor color)
+    {
+        if (color == PieceColor.Black)
+        {
+            QueenGlyph.Text = "♛";
+            RookGlyph.Text = "♜";
+            BishopGlyph.Text = "♝";
+            KnightGlyph.Text = "♞";
+        }
+        else
+        {
+            QueenGlyph.Text = "♕";
+            RookGlyph.Text = "♖";
+            BishopGlyph.Text = "♗";
+            KnightGlyph.Text = "♘";
+        }
+    }
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            DialogResult = false;
+            Close();
+        }
+    }
+
+    private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        DialogResult = false;
+        Close();
     }
 
     private void Queen_Click(object sender, RoutedEventArgs e)

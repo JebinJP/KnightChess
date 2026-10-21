@@ -111,6 +111,28 @@ public class GeraChessGameAdapter : IChessGame
         return FindLegalMove(from, to, promotion) is not null;
     }
 
+    public bool IsPromotionMove(BoardSquare from, BoardSquare to)
+    {
+        if (_isGameOver || !from.IsValid || !to.IsValid)
+            return false;
+
+        var piece = GetPieceAt(from);
+        if (piece is null || piece.Type != PieceType.Pawn || piece.Color != ActiveTurn)
+            return false;
+
+        int promotionRank = piece.Color == PieceColor.White ? 7 : 0;
+        if (to.Rank != promotionRank)
+            return false;
+
+        var fromStr = from.AlgebraicNotation;
+        var toStr = to.AlgebraicNotation;
+
+        return _board.Moves().Any(m =>
+            m.OriginalPosition.ToString().ToLowerInvariant() == fromStr &&
+            m.NewPosition.ToString().ToLowerInvariant() == toStr &&
+            m.IsPromotion);
+    }
+
     public MoveResult MakeMove(BoardSquare from, BoardSquare to, PieceType? promotion = null)
     {
         if (_isGameOver)
@@ -334,7 +356,9 @@ public class GeraChessGameAdapter : IChessGame
         return _board.Moves().FirstOrDefault(m =>
             m.OriginalPosition.ToString().ToLowerInvariant() == fromStr &&
             m.NewPosition.ToString().ToLowerInvariant() == toStr &&
-            (!m.IsPromotion || (promotion.HasValue && m.Promotion is not null && ToDomainPieceType(m.Promotion.Type) == promotion.Value)));
+            (m.IsPromotion
+                ? (promotion.HasValue && m.Promotion is not null && ToDomainPieceType(m.Promotion.Type) == promotion.Value)
+                : !promotion.HasValue));
     }
 
     private MoveResult ExecuteMoveInternal(ExternalChess.Move move, BoardSquare from, BoardSquare to, PieceType? promotion)
