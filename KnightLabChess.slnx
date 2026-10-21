@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KnightLabChess.App/KnightLabChess.App.csproj" />
+    <Project Path="src/KnightLabChess.Core/KnightLabChess.Core.csproj" />
+    <Project Path="src/KnightLabChess.Infrastructure/KnightLabChess.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KnightLabChess.Core.Tests/KnightLabChess.Core.Tests.csproj" />
+    <Project Path="tests/KnightLabChess.Infrastructure.Tests/KnightLabChess.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

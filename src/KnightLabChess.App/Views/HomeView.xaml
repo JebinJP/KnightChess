@@ -1,0 +1,192 @@
+<UserControl x:Class="KnightLabChess.App.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:KnightLabChess.App.ViewModels">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32" MaxWidth="1000" HorizontalAlignment="Left">
+            <!-- Welcome Header -->
+            <Border Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="28"
+                    Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="KnightLab Chess"
+                                   Style="{StaticResource H1TextStyle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,6" />
+                        <TextBlock Text="Offline-first Windows desktop chess academy &amp; play arena."
+                                   Style="{StaticResource BodyTextStyle}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,0,0,16" />
+                        <TextBlock Text="Teach users how to think, not just which moves to play."
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1"
+                               Text="♞"
+                               FontSize="72"
+                               Foreground="{StaticResource AccentBrush}"
+                               VerticalAlignment="Center"
+                               Margin="20,0,10,0" />
+                </Grid>
+            </Border>
+
+            <!-- Quick Action Card -->
+            <Border Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource AccentDarkBrush}"
+                    BorderThickness="1.5"
+                    CornerRadius="10"
+                    Padding="22"
+                    Margin="0,0,0,24">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Content="Go to Arena →"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Command="{Binding DataContext.NavigateToCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding DataContext.NavigationItems[1], RelativeSource={RelativeSource AncestorType=Window}}"
+                            Padding="20,10"
+                            VerticalAlignment="Center" />
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Play Chess Arena"
+                                   Style="{StaticResource H2TextStyle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="Start a local human vs human match with legal move enforcement, draw detection, and SQLite persistence."
+                                   Style="{StaticResource BodyTextStyle}"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Status & Stats Row -->
+            <UniformGrid Columns="3" Margin="0,0,0,24">
+                <!-- Stat 1 -->
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Games Logged"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="{Binding GamesPlayed}"
+                                   Style="{StaticResource H1TextStyle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Stat 2 -->
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="18"
+                        Margin="6,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="Core Rules Status"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="100% Verified"
+                                   Style="{StaticResource H2TextStyle}"
+                                   Foreground="{StaticResource AccentBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Stat 3 -->
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="18"
+                        Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Engine Mode"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="Offline Local"
+                                   Style="{StaticResource H2TextStyle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Continue Learning Academy Card -->
+            <Border Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="📖" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="NEXT RECOMMENDED LESSON"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding NextLessonTitle}"
+                                   Style="{StaticResource H2TextStyle}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding NextLessonDescription}"
+                                   Style="{StaticResource BodyTextStyle}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,0,0,16"
+                                   TextWrapping="Wrap" />
+
+                        <!-- Academy Progress Bar -->
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="Curriculum Progress"
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Foreground="{StaticResource TextMutedBrush}" />
+                            <TextBlock DockPanel.Dock="Right"
+                                       Text="{Binding LessonsCompleted, StringFormat='{}{0} lessons done'}"
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Foreground="{StaticResource AccentBrush}" />
+                        </DockPanel>
+                        <ProgressBar Value="{Binding LearningProgress}"
+                                     Height="6"
+                                     Foreground="{StaticResource AccentBrush}"
+                                     Background="{StaticResource SurfaceHoverBrush}"
+                                     BorderThickness="0" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="Go to Academy →"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding DataContext.NavigateToCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding DataContext.NavigationItems[2], RelativeSource={RelativeSource AncestorType=Window}}"
+                            Padding="22,12"
+                            VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

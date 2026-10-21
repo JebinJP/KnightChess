@@ -1,0 +1,211 @@
+[
+  {
+    "id": "tact_01_the_fork",
+    "title": "The Deadly Fork",
+    "description": "Learn to attack two or more enemy targets simultaneously with a single piece.",
+    "stage": "Intermediate",
+    "category": "Tactics",
+    "order": 1,
+    "version": 1,
+    "objectives": [
+      "Identify geometric alignment of unprotected enemy pieces",
+      "Execute Knight, Pawn, and Queen forks",
+      "Calculate escape squares before springing the fork"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Fork Weapon",
+        "text": "A fork is a double attack where one piece simultaneously threatens two (or more!) opponent pieces. Because the opponent can only move one piece per turn, the other piece is frequently captured.",
+        "fen": "4k3/8/8/8/8/8/8/4K3 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: The Royal Knight Fork",
+        "text": "Jump your Knight from c3 to d5 to fork the Black King on e7 and Black Queen on c7!",
+        "fen": "4r3/1pq1k3/8/8/8/2N5/PPP2PPP/4RRK1 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Nd5+", "Nd5", "c3d5"],
+        "hint": "Look for square d5 where the Knight delivers check to e7 while attacking c7.",
+        "correctFeedback": "Boom! 1. Nd5+ checks the King and snares the Queen on the next turn.",
+        "incorrectFeedback": "Play 1. Nd5+ to execute the royal fork."
+      }
+    ]
+  },
+  {
+    "id": "tact_02_the_skewer",
+    "title": "The Skewer (X-Ray)",
+    "description": "Attack a high-value piece along a rank, file, or diagonal to capture the piece behind it.",
+    "stage": "Intermediate",
+    "category": "Tactics",
+    "order": 2,
+    "version": 1,
+    "objectives": [
+      "Distinguish between a Pin (less valuable piece in front) and a Skewer (more valuable piece in front)",
+      "Use Rooks, Bishops, and Queens to lance through enemy pieces",
+      "Convert skewers into decisive endgame wins"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Inverted Pin",
+        "text": "In a skewer, the MORE valuable piece is in the line of fire first (often the King or Queen). When that piece is forced to move, the piece behind it is exposed and captured.",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Diagonal Bishop Skewer",
+        "text": "Black's King is on c6 and the Rook is on h1. Play Bb7+ to skewer the King and win the Rook!",
+        "fen": "8/8/2k5/8/8/8/8/B5rK w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Bb7+", "Bb7", "a1b7"],
+        "hint": "Move the Bishop from a1 to b7 with check.",
+        "correctFeedback": "Magnificent! The King must step aside, allowing White to capture the Rook on h1.",
+        "incorrectFeedback": "Play 1. Bb7+ to skewer King and Rook."
+      }
+    ]
+  },
+  {
+    "id": "tact_03_discovered_attack",
+    "title": "Discovered Attacks",
+    "description": "Move one piece to unmask a devastating ambush from a hidden friendly piece behind it.",
+    "stage": "Intermediate",
+    "category": "Tactics",
+    "order": 3,
+    "version": 1,
+    "objectives": [
+      "Set up batteries with Rooks, Bishops, and Queens",
+      "Use the unmasking piece to make an independent threat",
+      "Harness the unstoppable power of discovered checks"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Unleashing the Ambush",
+        "text": "A discovered attack happens when moving one piece unleashes an attack from another piece stationed behind it. The moving piece can often capture free material or deliver a second threat because the opponent is paralyzed by the unmasked attack.",
+        "fen": "4k3/8/8/8/8/8/8/4K3 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Discovered Checkmate Attack",
+        "text": "White has a battery with Rook on e1 and Bishop on e4 facing Black's King on e8. Move the Bishop to h7 to deliver discovered check and attack Black's Queen on d8!",
+        "fen": "r1bqk2r/ppppbppp/8/8/4B3/8/PPPP1PPP/R1BQR1K1 w kq - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Bxh7+", "Bxh7", "e4h7"],
+        "hint": "Move the Bishop from e4 to h7, giving check from the e1 Rook.",
+        "correctFeedback": "Brilliant! The discovered check paralyzes Black while your Bishop snatches a pawn or creates havoc.",
+        "incorrectFeedback": "Play 1. Bxh7+ with discovered check."
+      }
+    ]
+  },
+  {
+    "id": "tact_04_double_check",
+    "title": "The Lethal Double Check",
+    "description": "Two pieces deliver check in the same turn — forcing the enemy King to run for its life.",
+    "stage": "Intermediate",
+    "category": "Tactics",
+    "order": 4,
+    "version": 1,
+    "objectives": [
+      "Understand why double checks CANNOT be blocked or captured",
+      "Recognize that the King is forced to make a move",
+      "Combine double checks with checkmate nets"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Ultimate Inescapable Threat",
+        "text": "When a discovered attack is also a check from BOTH the moving piece and the unmasked piece, it is a DOUBLE CHECK. The opponent cannot block both checks or take both checking pieces — the King MUST move!",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Quiz",
+        "title": "Double Check Defense",
+        "text": "When your King is subjected to a Double Check, what are your legal defensive options?",
+        "quizOptions": [
+          {
+            "text": "The King MUST move to an unattacked square (no blocking or capturing allowed).",
+            "isCorrect": true,
+            "explanation": "Spot on! You cannot capture two pieces at once or block two lines of fire with one move, so the King must step away."
+          },
+          {
+            "text": "You can block both checks with your Queen.",
+            "isCorrect": false,
+            "explanation": "A single piece cannot block two different lines of attack simultaneously."
+          },
+          {
+            "text": "You can capture the unmasked piece.",
+            "isCorrect": false,
+            "explanation": "Capturing one piece would still leave your King in check from the second piece, which is illegal."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tact_05_deflection",
+    "title": "Deflection & Overloading",
+    "description": "Lure vital defenders away from key squares to deliver the knockout blow.",
+    "stage": "Intermediate",
+    "category": "Tactics",
+    "order": 5,
+    "version": 1,
+    "objectives": [
+      "Identify pieces burdened with multiple defensive tasks (overloaded)",
+      "Sacrifice material to lure the critical defender away",
+      "Penetrate behind enemy lines once the guard is removed"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Removing the Guardian",
+        "text": "When an enemy piece is the sole guardian of a critical square or checkmate threat, you can often sacrifice a piece to deflect the guardian away, leaving the target defenseless.",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Deflecting the Queen",
+        "text": "Black's Queen on d7 guards against Rd8#. Play Re8+! to sacrifice the Rook, deflecting Black's Queen away from defense!",
+        "fen": "3r2k1/3q1ppp/8/8/8/8/8/4R1K1 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Re8+", "Re8", "e1e8"],
+        "hint": "Check the King with 1. Re8+ on the back rank to deflect Black's pieces.",
+        "correctFeedback": "Devastating! Black's Queen or Rook must capture on e8, completely abandoning their defense.",
+        "incorrectFeedback": "Play 1. Re8+ to deflect the defender."
+      }
+    ]
+  },
+  {
+    "id": "tact_06_back_rank_mate",
+    "title": "Back Rank Checkmates",
+    "description": "Punish an uncastled or pawn-shielded King trapped along the 1st or 8th rank.",
+    "stage": "Intermediate",
+    "category": "Endgame & Checkmates",
+    "order": 6,
+    "version": 1,
+    "objectives": [
+      "Recognize the deadly vulnerability of the castled pawn shield",
+      "Understand the concept of 'Luft' (breathing room for the King)",
+      "Coordinate Rooks and Queens to blast through to the 8th rank"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Trapped by Friendly Pawns",
+        "text": "When pawns on f7, g7, and h7 have not moved, the Black King cannot step forward. If a White Rook or Queen reaches the 8th rank and delivers check, it is instant checkmate unless Black can block or capture.",
+        "fen": "6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Deliver the Back Rank Mate",
+        "text": "Play Re8# to deliver the decisive checkmate blow to Black's trapped King!",
+        "fen": "6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Re8#", "Re8", "e1e8"],
+        "hint": "Slide your Rook along the e-file all the way to e8.",
+        "correctFeedback": "Checkmate! The pawns on f7, g7, and h7 blocked their own King's escape.",
+        "incorrectFeedback": "Play 1. Re8# to deliver checkmate."
+      }
+    ]
+  }
+]

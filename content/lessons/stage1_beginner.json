@@ -1,0 +1,393 @@
+[
+  {
+    "id": "beg_01_the_board",
+    "title": "The Chessboard & Files/Ranks",
+    "description": "Learn about the 64 squares, ranks, files, diagonals, and how the board is set up.",
+    "stage": "Beginner",
+    "category": "Board Fundamentals",
+    "order": 1,
+    "version": 1,
+    "objectives": [
+      "Understand the 8x8 grid structure",
+      "Identify files (columns a-h) and ranks (rows 1-8)",
+      "Remember the golden rule: 'White on right'"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Welcome to the 64 Squares",
+        "text": "The game of chess is played on an 8x8 grid containing 64 alternating light and dark squares.\n\nAlways ensure the bottom-right corner square closest to each player is a light square ('white on right').",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Explanation",
+        "title": "Files and Ranks",
+        "text": "Vertical columns are called 'files', labeled from 'a' to 'h' from left to right (from White's perspective).\n\nHorizontal rows are called 'ranks', numbered from 1 to 8. Rank 1 is White's back rank, and Rank 8 is Black's back rank.",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Quiz",
+        "title": "Board Knowledge Check",
+        "text": "Which square is located at the intersection of the 4th file from the left and the 4th rank from White's side?",
+        "quizOptions": [
+          {
+            "text": "c4",
+            "isCorrect": false,
+            "explanation": "c is the 3rd file (a=1, b=2, c=3)."
+          },
+          {
+            "text": "d4",
+            "isCorrect": true,
+            "explanation": "Correct! The 4th file is 'd' and the 4th rank is '4', making it d4 (one of the key central squares)."
+          },
+          {
+            "text": "e4",
+            "isCorrect": false,
+            "explanation": "e is the 5th file."
+          },
+          {
+            "text": "d5",
+            "isCorrect": false,
+            "explanation": "d5 is on the 5th rank."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "beg_02_the_rook",
+    "title": "The Mighty Rook",
+    "description": "Master how the Rook moves in straight lines along files and ranks to dominate open lines.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 2,
+    "version": 1,
+    "objectives": [
+      "Move the Rook horizontally and vertically",
+      "Understand the Rook's range across open ranks and files",
+      "Capture enemy pieces with the Rook"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "How the Rook Moves",
+        "text": "The Rook moves as far as it wants forward, backward, left, or right along any rank or file, as long as its path is not blocked by another piece.",
+        "fen": "8/8/8/3R4/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Seize the Open File",
+        "text": "White has a Rook on d5. Move the Rook to the top rank (d8) to dominate the file.",
+        "fen": "8/8/8/3R4/8/8/8/8 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Rd8", "d5d8"],
+        "hint": "Click on your Rook on d5, then click on the d8 square at the top of the board.",
+        "correctFeedback": "Excellent! The Rook controls the entire d-file.",
+        "incorrectFeedback": "Look for square d8 on the top rank."
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Capture the Black Pawn",
+        "text": "There is an undefended black pawn on h5. Use your Rook on d5 to capture it!",
+        "fen": "8/8/8/3R3p/8/8/8/8 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Rxh5", "d5h5"],
+        "hint": "The Rook captures by moving into the square of an enemy piece. Move horizontally to h5.",
+        "correctFeedback": "Well played! You captured the pawn on h5.",
+        "incorrectFeedback": "Move your Rook horizontally across rank 5 to capture on h5."
+      }
+    ]
+  },
+  {
+    "id": "beg_03_the_knight",
+    "title": "The Leaping Knight",
+    "description": "Learn the unique L-shaped movement of the Knight and its special power to jump over other pieces.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 3,
+    "version": 1,
+    "objectives": [
+      "Master the Knight's 'L' jump: 2 squares in one direction, then 1 square perpendicular",
+      "Remember that Knights can jump over friendly and enemy pieces",
+      "Notice how Knights always land on an opposite color square"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Knight's Jump",
+        "text": "The Knight is the only piece in chess that can jump over other pieces!\n\nIt moves in an 'L' shape: two squares in any cardinal direction, then one square perpendicular. If it starts on a light square, it always lands on a dark square, and vice versa.",
+        "fen": "8/8/8/4N3/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Center the Knight",
+        "text": "Move your White Knight from f3 to d4 into the center of the board.",
+        "fen": "8/8/8/8/8/5N2/8/8 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Nd4", "f3d4"],
+        "hint": "From f3, move 2 squares left and 1 square up to d4.",
+        "correctFeedback": "Superb! Knights are at their most powerful when placed in the center.",
+        "incorrectFeedback": "Target square d4 is two squares to the left and one square forward from f3."
+      },
+      {
+        "type": "Quiz",
+        "title": "Knight Rules Quiz",
+        "text": "Can a Knight jump over enemy pieces that block its direct line of sight?",
+        "quizOptions": [
+          {
+            "text": "Yes, the Knight can jump over both friendly and enemy pieces.",
+            "isCorrect": true,
+            "explanation": "Correct! Knights leap freely over all obstacles, only capturing whatever is on their final destination square."
+          },
+          {
+            "text": "No, it must take the pieces it encounters along the way.",
+            "isCorrect": false,
+            "explanation": "Knights do not capture pieces they leap over."
+          },
+          {
+            "text": "Only if they are pawns.",
+            "isCorrect": false,
+            "explanation": "Knights can leap over any piece type."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "beg_04_the_bishop",
+    "title": "The Diagonal Bishop",
+    "description": "Understand color complexes, long diagonals, and how Bishops operate in pairs.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 4,
+    "version": 1,
+    "objectives": [
+      "Move diagonally as far as the path is clear",
+      "Recognize light-squared and dark-squared Bishops",
+      "Appreciate the power of open diagonals"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Diagonal Movement",
+        "text": "Bishops move along diagonal lines of the same color square they start on. A light-squared Bishop can never visit a dark square!\n\nBecause of this, players start with one Bishop of each color to complement each other.",
+        "fen": "8/8/8/3B4/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Seize the Long Diagonal",
+        "text": "Move your light-squared Bishop on d5 to the corner on h1.",
+        "fen": "8/8/8/3B4/8/8/8/8 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Bh1", "d5h1"],
+        "hint": "Slide your Bishop diagonally down and to the right into the bottom-right corner h1.",
+        "correctFeedback": "Great move! Long diagonals allow Bishops to influence the entire board.",
+        "incorrectFeedback": "Target square h1 is in the bottom-right corner along the light diagonal."
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Capture the Attacker",
+        "text": "A black Knight on g4 is menacing your position. Use your dark-squared Bishop on e2 to capture it!",
+        "fen": "8/8/8/8/6n1/8/4B3/8 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Bxg4", "e2g4"],
+        "hint": "Slide your Bishop on e2 up-right along the dark diagonal to g4.",
+        "correctFeedback": "Well done! You captured the threatening Knight.",
+        "incorrectFeedback": "Look for the diagonal path from e2 to g4."
+      }
+    ]
+  },
+  {
+    "id": "beg_05_the_queen",
+    "title": "The All-Powerful Queen",
+    "description": "Unleash the strongest piece on the board, combining the powers of Rook and Bishop.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 5,
+    "version": 1,
+    "objectives": [
+      "Combine straight and diagonal movements",
+      "Learn why the Queen is worth 9 points",
+      "Avoid bringing the Queen out too early where it can be attacked"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Queen's Dominion",
+        "text": "The Queen is the most versatile and valuable piece on the board (worth 9 pawns). She can move in any straight line — vertically, horizontally, or diagonally — as far as squares are unobstructed.",
+        "fen": "8/8/8/4Q3/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Queen Infiltration",
+        "text": "Deliver checkmate on f7 with your Queen, protected by your Bishop on c4!",
+        "fen": "r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 2 4",
+        "playerColor": "White",
+        "correctMoves": ["Qxf7#", "h5f7"],
+        "hint": "Your Queen on h5 can move diagonally and vertically. Look at the weak f7 square right next to Black's King.",
+        "correctFeedback": "Checkmate! The Queen attacks the King at point-blank range, and Black cannot capture because the Bishop defends her.",
+        "incorrectFeedback": "Capture on f7 with the Queen to deliver checkmate."
+      }
+    ]
+  },
+  {
+    "id": "beg_06_the_king",
+    "title": "The Royal King & Castling",
+    "description": "Protect the most critical piece in chess and master kingside and queenside castling.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 6,
+    "version": 1,
+    "objectives": [
+      "Move the King one square in any direction",
+      "Learn the special castling move to safeguard the King",
+      "Understand conditions when castling is legal"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The King's Safety",
+        "text": "The King can move one square in any direction. Unlike all other pieces, the King can never be captured — if the King is attacked and cannot escape, the game ends in Checkmate!",
+        "fen": "8/8/8/4K3/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Explanation",
+        "title": "The Special Move: Castling",
+        "text": "Castling is the only move where you move TWO pieces in a single turn!\n\nThe King moves two squares toward a Rook, and that Rook hops over the King to the adjacent square. This moves the King to safety behind pawns and brings the Rook into play.",
+        "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Castle Kingside",
+        "text": "Castle your White King kingside (O-O) to complete development.",
+        "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+        "playerColor": "White",
+        "correctMoves": ["O-O", "e1g1"],
+        "hint": "Click your King on e1, then click two squares to the right on g1.",
+        "correctFeedback": "Excellent! Your King is securely tucked away and your Rook is connected.",
+        "incorrectFeedback": "To castle kingside, move your King from e1 to g1."
+      }
+    ]
+  },
+  {
+    "id": "beg_07_the_pawn",
+    "title": "The Brave Pawn & Promotion",
+    "description": "Learn pawn moves, diagonal captures, double-step from starting ranks, and promotion.",
+    "stage": "Beginner",
+    "category": "Piece Movements",
+    "order": 7,
+    "version": 1,
+    "objectives": [
+      "Move pawns 1 step forward (or 2 steps on their first move)",
+      "Capture one step diagonally forward",
+      "Promote a pawn when it reaches the 8th rank"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "How Pawns March",
+        "text": "Pawns are the soul of chess! They move straight forward one square, but capture diagonally forward. On its very first move, a pawn has the option to move forward TWO squares.",
+        "fen": "8/8/8/8/8/8/4P3/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Pawn Promotion",
+        "text": "Your pawn on e7 is on the verge of greatness! Push it to e8 to promote to a Queen.",
+        "fen": "8/4P3/8/8/8/8/8/4K2k w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["e8=Q", "e8Q", "e7e8q"],
+        "hint": "Push the pawn from e7 to e8. When promoted, choose Queen.",
+        "correctFeedback": "Phenomenal! A humble pawn became a mighty Queen.",
+        "incorrectFeedback": "Move your pawn forward to e8."
+      }
+    ]
+  },
+  {
+    "id": "beg_08_check_and_checkmate",
+    "title": "Check, Checkmate & Stalemate",
+    "description": "Distinguish between being checked, delivering checkmate, and accidental stalemate draws.",
+    "stage": "Beginner",
+    "category": "Rules & Objectives",
+    "order": 8,
+    "version": 1,
+    "objectives": [
+      "Understand the 3 ways to escape check: Capture, Protect (Block), Run",
+      "Deliver checkmate to win the game",
+      "Avoid stalemate when winning"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "Escaping Check: CPR",
+        "text": "When your King is attacked, you MUST resolve the check immediately using CPR:\n- C: Capture the checking piece\n- P: Protect (block the line of attack with another piece)\n- R: Run away to an unattacked square",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Back-Rank Mate",
+        "text": "Black's King is trapped behind its own pawns on the back rank. Use your Rook on d1 to deliver checkmate!",
+        "fen": "6k1/5ppp/8/8/8/8/8/3R2K1 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Rd8#", "d1d8"],
+        "hint": "Move your Rook all the way to d8 on Black's back rank.",
+        "correctFeedback": "Checkmate! The Black King has nowhere to run.",
+        "incorrectFeedback": "Play Rd8 to attack the King on the back rank."
+      },
+      {
+        "type": "Quiz",
+        "title": "Stalemate vs Checkmate",
+        "text": "If a player has no legal moves and their King is NOT in check, what is the result of the game?",
+        "quizOptions": [
+          {
+            "text": "The player with more pieces wins.",
+            "isCorrect": false,
+            "explanation": "Material count does not determine the game result in stalemate."
+          },
+          {
+            "text": "It is a Draw by Stalemate.",
+            "isCorrect": true,
+            "explanation": "Correct! When a player cannot make any legal move and their King is safe from check, it is Stalemate, resulting in a draw (half point each)."
+          },
+          {
+            "text": "The player whose turn it is loses on time.",
+            "isCorrect": false,
+            "explanation": "No, this is a stalemate rule."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "beg_09_basic_tactics",
+    "title": "Basic Tactics: The Royal Fork",
+    "description": "Discover how a single piece can attack multiple enemy targets at once.",
+    "stage": "Beginner",
+    "category": "Tactics",
+    "order": 9,
+    "version": 1,
+    "objectives": [
+      "Identify forking squares",
+      "Execute double attacks with Knights",
+      "Win material decisively"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "What is a Fork?",
+        "text": "A 'fork' occurs when a single piece attacks two or more opponent pieces at the same time. Knights are notoriously dangerous forkers because they can leap over obstacles!",
+        "fen": "r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Fork King and Rook",
+        "text": "Black has an uncastled King on e8 and a Rook on a8. Jump your Knight from b5 to c7 to deliver check and win the Rook!",
+        "fen": "r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["Nc7+", "b5c7"],
+        "hint": "Jump your Knight into c7. It will attack both the King on e8 and the Rook on a8 simultaneously.",
+        "correctFeedback": "Brilliant! The King must move out of check, and on your next move you will capture the Rook.",
+        "incorrectFeedback": "Target square c7 is 2 squares up and 1 square right from b5."
+      }
+    ]
+  }
+]

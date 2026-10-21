@@ -1,0 +1,67 @@
+<Window x:Class="KnightLabChess.App.Views.Dialogs.PromotionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Choose Promotion Piece"
+        Width="380" Height="220"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource AccentBrush}"
+            BorderThickness="2"
+            CornerRadius="12"
+            Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Title -->
+            <TextBlock Grid.Row="0"
+                       Text="Promote Pawn"
+                       Style="{StaticResource H2TextStyle}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,16" />
+
+            <!-- Piece Options -->
+            <UniformGrid Grid.Row="1" Columns="4" Margin="0,5">
+                <!-- Queen -->
+                <Button Margin="6"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Click="Queen_Click"
+                        ToolTip="Promote to Queen">
+                    <TextBlock Text="♛" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Rook -->
+                <Button Margin="6"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Click="Rook_Click"
+                        ToolTip="Promote to Rook">
+                    <TextBlock Text="♜" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Bishop -->
+                <Button Margin="6"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Click="Bishop_Click"
+                        ToolTip="Promote to Bishop">
+                    <TextBlock Text="♝" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Knight -->
+                <Button Margin="6"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Click="Knight_Click"
+                        ToolTip="Promote to Knight">
+                    <TextBlock Text="♞" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </UniformGrid>
+        </Grid>
+    </Border>
+</Window>

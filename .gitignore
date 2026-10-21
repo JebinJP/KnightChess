@@ -1,0 +1,62 @@
+## Implementation Plan
+docs/IMPLEMENTATION_PLAN.md
+**/IMPLEMENTATION_PLAN.md
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio & IDE files
+.vs/
+.idea/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+## .NET Core & NuGet
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/packages/
+!**/packages/build/
+*.nupkg
+*.snupkg
+nuget.config
+
+## Test and Coverage Results
+TestResults/
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+
+## Database and Local Data
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.local.db
+
+## Engine Binaries & Third-Party Tools
+*.exe
+!src/**/*.exe
+stockfish/
+stockfish*
+
+## Environment & Secrets
+.env
+.env.*
+*.local.json
+appsettings*.local.json
+
+## OS Generated Files
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.DS_Store

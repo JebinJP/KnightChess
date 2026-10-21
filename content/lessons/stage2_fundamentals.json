@@ -1,0 +1,119 @@
+[
+  {
+    "id": "fund_01_opening_principles",
+    "title": "The Golden Rules of the Opening",
+    "description": "Establish control of the center, activate minor pieces, and ensure king safety from move one.",
+    "stage": "Fundamentals",
+    "category": "Opening Principles",
+    "order": 1,
+    "version": 1,
+    "objectives": [
+      "Occupy or control the four central squares (d4, d5, e4, e5)",
+      "Develop Knights and Bishops to active squares",
+      "Castle early to safeguard the King"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Four Golden Rules",
+        "text": "Every grandmaster follows four golden rules in the opening:\n1. Fight for the center (e4 and d4)\n2. Develop minor pieces (Knights and Bishops)\n3. Castle your King early into safety\n4. Do not move the same piece twice or bring the Queen out prematurely",
+        "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      },
+      {
+        "type": "Demonstration",
+        "title": "Demonstration: The Classical Italian Opening",
+        "text": "Watch how White and Black develop harmoniously, fighting for the center and castling quickly.",
+        "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "demonstrationMoves": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "O-O"]
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Seize the Center",
+        "text": "Play White's premier opening move to occupy the e4 square and open diagonals for Queen and Bishop.",
+        "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "playerColor": "White",
+        "correctMoves": ["e4", "e2e4"],
+        "hint": "Push your King's pawn forward two squares to e4.",
+        "correctFeedback": "Excellent! 1. e4 stakes immediate claim to the center.",
+        "incorrectFeedback": "Play 1. e4 to occupy the center."
+      }
+    ]
+  },
+  {
+    "id": "fund_02_piece_values",
+    "title": "Piece Values & Tactical Math",
+    "description": "Learn standard piece valuations to evaluate trades and avoid losing material.",
+    "stage": "Fundamentals",
+    "category": "Strategy & Calculation",
+    "order": 2,
+    "version": 1,
+    "objectives": [
+      "Master standard piece values (P=1, N=3, B=3, R=5, Q=9)",
+      "Understand why trading a minor piece for a Rook is winning 'The Exchange'",
+      "Count attackers versus defenders before capturing"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "The Point System",
+        "text": "Pieces are assigned point values to assess trade quality:\n- Pawn: 1 point\n- Knight: 3 points\n- Bishop: 3 points\n- Rook: 5 points\n- Queen: 9 points\n- King: Priceless!\n\nA Rook is worth more than a Knight or Bishop. Winning a Rook for a minor piece (+2 points) is called winning 'the Exchange'.",
+        "fen": "8/8/8/8/8/8/8/8 w - - 0 1"
+      },
+      {
+        "type": "Quiz",
+        "title": "Material Trade Quiz",
+        "text": "If White trades a Bishop (3) and a Knight (3) for Black's Queen (9), who gained the material advantage?",
+        "quizOptions": [
+          {
+            "text": "White gained a +3 point advantage.",
+            "isCorrect": true,
+            "explanation": "Correct! White gave up 6 points (3+3) to take 9 points, resulting in a +3 material gain."
+          },
+          {
+            "text": "Black gained the advantage because they have two pieces.",
+            "isCorrect": false,
+            "explanation": "Two minor pieces (6 points) are worth substantially less than a Queen (9 points)."
+          },
+          {
+            "text": "The trade is equal.",
+            "isCorrect": false,
+            "explanation": "6 points vs 9 points is not equal."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fund_03_the_pin",
+    "title": "The Tactical Pin",
+    "description": "Immobilize enemy pieces by pinning them against more valuable targets behind them.",
+    "stage": "Fundamentals",
+    "category": "Tactics",
+    "order": 3,
+    "version": 1,
+    "objectives": [
+      "Understand the difference between an Absolute Pin (King behind) and Relative Pin",
+      "Execute pins along ranks, files, and diagonals",
+      "Pile up attackers against the pinned piece"
+    ],
+    "steps": [
+      {
+        "type": "Explanation",
+        "title": "What is a Pin?",
+        "text": "A pin occurs when an attacking piece threatens an enemy piece that cannot move without exposing an even more valuable piece behind it.\n\nAn ABSOLUTE pin is against the King: the pinned piece is legally forbidden from moving!",
+        "fen": "r1bqk2r/pppp1ppp/2n2n2/4p3/1b2P3/3P1N2/PPP1BPPP/RNBQK2R w KQkq - 2 5"
+      },
+      {
+        "type": "Exercise",
+        "title": "Exercise: Absolute Pin",
+        "text": "Black's King is on e8. Move your White Bishop to b5 to absolutely pin the Black Knight on c6!",
+        "fen": "r1bqk1nr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+        "playerColor": "White",
+        "correctMoves": ["Bb5", "f1b5"],
+        "hint": "Develop your light-squared Bishop from f1 diagonally to b5.",
+        "correctFeedback": "Superb! The Knight on c6 is now pinned to the King on e8 and cannot move.",
+        "incorrectFeedback": "Play Bb5 to create an absolute pin on the Knight."
+      }
+    ]
+  }
+]

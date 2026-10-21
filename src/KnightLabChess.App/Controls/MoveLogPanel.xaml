@@ -1,0 +1,72 @@
+<UserControl x:Class="KnightLabChess.App.Controls.MoveLogPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:KnightLabChess.App.ViewModels">
+
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <TextBlock Grid.Row="0"
+                       Text="Move History"
+                       Style="{StaticResource H3TextStyle}"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Margin="0,0,0,10" />
+
+            <!-- Moves List -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding MoveHistory}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:MoveHistoryItem}">
+                            <Border Padding="6,4"
+                                    Margin="0,1"
+                                    CornerRadius="4"
+                                    Background="Transparent">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="36" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Move Number -->
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding MoveNumber, StringFormat='{}{0}.'}"
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               FontFamily="{StaticResource MonoFont}"
+                                               FontSize="13" />
+
+                                    <!-- White Move -->
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding WhiteSan}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontFamily="{StaticResource MonoFont}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13" />
+
+                                    <!-- Black Move -->
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding BlackSan}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontFamily="{StaticResource MonoFont}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>
