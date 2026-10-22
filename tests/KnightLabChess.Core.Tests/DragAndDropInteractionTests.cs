@@ -558,4 +558,44 @@ public class DragAndDropInteractionTests
             Assert.Null(sqOutside);
         });
     }
+
+    [Fact]
+    public void UI_ChessBoardControl_MaintainsSquareAspectRatioAndResponsiveMeasure()
+    {
+        RunInSta(() =>
+        {
+            var control = new KnightLabChess.App.Controls.ChessBoardControl();
+            var vm = new ChessBoardViewModel();
+            control.DataContext = vm;
+
+            // 1. Constrained by width < height (e.g. 700 width, 900 height)
+            var size1 = control.CalculateTargetBoardSize(new System.Windows.Size(700, 900));
+            Assert.Equal(700, size1.Width);
+            Assert.Equal(700, size1.Height);
+
+            // 2. Constrained by height < width (e.g. 1000 width, 650 height)
+            var size2 = control.CalculateTargetBoardSize(new System.Windows.Size(1000, 650));
+            Assert.Equal(650, size2.Width);
+            Assert.Equal(650, size2.Height);
+
+            // 3. Constrained below MinBoardSize (e.g. 300 width, 300 height with MinBoardSize 380)
+            var size3 = control.CalculateTargetBoardSize(new System.Windows.Size(300, 300));
+            Assert.Equal(380, size3.Width);
+            Assert.Equal(380, size3.Height);
+
+            // 4. Unconstrained (infinite bounds fallback to 600)
+            var sizeInf = control.CalculateTargetBoardSize(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+            Assert.Equal(600, sizeInf.Width);
+            Assert.Equal(600, sizeInf.Height);
+
+            // 5. Measure and Arrange lifecycle produces square dimensions
+            control.Measure(new System.Windows.Size(720, 900));
+            Assert.Equal(720, control.DesiredSize.Width);
+            Assert.Equal(720, control.DesiredSize.Height);
+
+            control.Arrange(new System.Windows.Rect(0, 0, 720, 720));
+            Assert.Equal(720, control.RenderSize.Width);
+            Assert.Equal(720, control.RenderSize.Height);
+        });
+    }
 }

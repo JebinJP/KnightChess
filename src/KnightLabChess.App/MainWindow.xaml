@@ -93,7 +93,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <RadioButton Style="{StaticResource NavButtonStyle}"
-                                         IsChecked="{Binding IsSelected, RelativeSource={RelativeSource Self}, Mode=OneWay}"
+                                         IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                          Command="{Binding DataContext.NavigateToCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                          CommandParameter="{Binding}"
                                          AutomationProperties.Name="{Binding Title}">

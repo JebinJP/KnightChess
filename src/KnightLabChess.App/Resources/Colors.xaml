@@ -2,53 +2,55 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!--  KnightLab Chess V2.0 — Calm Translucent Slate Palette       -->
+    <!--  KnightLab Chess V2.0 — Refined Obsidian Glass & Gold System -->
     <!-- ═══════════════════════════════════════════════════════════ -->
 
-    <!-- Layered Backgrounds -->
-    <Color x:Key="BackgroundDarkestColor">#FF0B0D11</Color>
-    <Color x:Key="BackgroundDarkColor">#FF11141B</Color>
-    <Color x:Key="BackgroundColor">#FF161A23</Color>
-    <Color x:Key="BackgroundLightColor">#FF1D222E</Color>
-    <Color x:Key="BackgroundLighterColor">#FF242B3A</Color>
+    <!-- Neutral Layered Backgrounds (Obsidian to Charcoal) -->
+    <Color x:Key="BackgroundDarkestColor">#FF0C0D10</Color>
+    <Color x:Key="BackgroundDarkColor">#FF12141A</Color>
+    <Color x:Key="BackgroundColor">#FF171A22</Color>
+    <Color x:Key="BackgroundLightColor">#FF1E222D</Color>
+    <Color x:Key="BackgroundLighterColor">#FF272C39</Color>
 
-    <!-- Glass & Card Surfaces -->
-    <Color x:Key="SurfaceColor">#FF1E2432</Color>
-    <Color x:Key="SurfaceLightColor">#FF272F41</Color>
-    <Color x:Key="SurfaceHoverColor">#FF313A50</Color>
-    <Color x:Key="SurfaceGlassColor">#D01E2432</Color>
+    <!-- Glass & Card Surfaces (Layered translucent charcoal) -->
+    <Color x:Key="SurfaceColor">#FF1C202A</Color>
+    <Color x:Key="SurfaceLightColor">#FF252B38</Color>
+    <Color x:Key="SurfaceHoverColor">#FF2E3646</Color>
+    <Color x:Key="SurfaceGlassColor">#D91C202A</Color>
+    <Color x:Key="SurfaceGlassLightColor">#E6252B38</Color>
 
-    <!-- Refined Glass & Structural Borders -->
-    <Color x:Key="BorderColor">#FF2A3346</Color>
-    <Color x:Key="BorderLightColor">#FF3B4760</Color>
-    <Color x:Key="GlassBorderColor">#24FFFFFF</Color>
-    <Color x:Key="GlassBorderLightColor">#3DFFFFFF</Color>
+    <!-- Subtle Glass & Structural Borders -->
+    <Color x:Key="BorderColor">#FF282D3A</Color>
+    <Color x:Key="BorderLightColor">#FF383F52</Color>
+    <Color x:Key="GlassBorderColor">#20FFFFFF</Color>
+    <Color x:Key="GlassBorderLightColor">#38FFFFFF</Color>
 
-    <!-- Modern Typography Colors -->
-    <Color x:Key="TextPrimaryColor">#FFF3F5F9</Color>
-    <Color x:Key="TextSecondaryColor">#FFA4B0C7</Color>
-    <Color x:Key="TextMutedColor">#FF6C7A94</Color>
-    <Color x:Key="TextDisabledColor">#FF485265</Color>
+    <!-- Refined Typography System -->
+    <Color x:Key="TextPrimaryColor">#FFF4F5F7</Color>
+    <Color x:Key="TextSecondaryColor">#FF9CA3AF</Color>
+    <Color x:Key="TextMutedColor">#FF64748B</Color>
+    <Color x:Key="TextDisabledColor">#FF475569</Color>
 
-    <!-- Emerald Primary Accent System -->
-    <Color x:Key="AccentColor">#FF10B981</Color>
-    <Color x:Key="AccentLightColor">#FF34D399</Color>
-    <Color x:Key="AccentDarkColor">#FF059669</Color>
-    <Color x:Key="AccentSubtleColor">#1E10B981</Color>
+    <!-- Single Restrained Accent: Tournament Warm Amber / Burnished Gold -->
+    <Color x:Key="AccentColor">#FFC89B3C</Color>
+    <Color x:Key="AccentLightColor">#FFDCB054</Color>
+    <Color x:Key="AccentDarkColor">#FFA47C25</Color>
+    <Color x:Key="AccentSubtleColor">#20C89B3C</Color>
+    <Color x:Key="AccentHoverGlowColor">#40C89B3C</Color>
 
-    <!-- Semantic State Colors -->
-    <Color x:Key="SuccessColor">#FF10B981</Color>
+    <!-- Semantic State Colors (Clear and functional) -->
+    <Color x:Key="SuccessColor">#FF22C55E</Color>
     <Color x:Key="WarningColor">#FFF59E0B</Color>
     <Color x:Key="ErrorColor">#FFEF4444</Color>
     <Color x:Key="InfoColor">#FF3B82F6</Color>
 
-    <!-- Master Tournament Board Colors -->
-    <Color x:Key="BoardLightSquareColor">#FFEAE4D9</Color>
-    <Color x:Key="BoardDarkSquareColor">#FF5E7859</Color>
-    <Color x:Key="BoardSelectedSquareColor">#75F59E0B</Color>
-    <Color x:Key="BoardLegalMoveColor">#5510B981</Color>
-    <Color x:Key="BoardLastMoveColor">#45EAB308</Color>
-    <Color x:Key="BoardCheckColor">#90EF4444</Color>
+    <!-- Classic High-Contrast Tournament Chessboard Palette -->
+    <Color x:Key="BoardLightSquareColor">#FFEEEED2</Color>
+    <Color x:Key="BoardDarkSquareColor">#FF769656</Color>
+    <Color x:Key="BoardSelectedSquareColor">#B3F7E043</Color>
+    <Color x:Key="BoardLegalMoveColor">#40000000</Color>
+    <Color x:Key="BoardLastMoveColor">#80F7E043</Color>
+    <Color x:Key="BoardCheckColor">#B3E53935</Color>
 
     <!-- Solid & Glass Brushes -->
     <SolidColorBrush x:Key="BackgroundDarkestBrush" Color="{StaticResource BackgroundDarkestColor}" />
@@ -60,6 +62,7 @@
     <SolidColorBrush x:Key="SurfaceLightBrush" Color="{StaticResource SurfaceLightColor}" />
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource SurfaceHoverColor}" />
     <SolidColorBrush x:Key="SurfaceGlassBrush" Color="{StaticResource SurfaceGlassColor}" />
+    <SolidColorBrush x:Key="SurfaceGlassLightBrush" Color="{StaticResource SurfaceGlassLightColor}" />
 
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
     <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLightColor}" />
@@ -75,6 +78,7 @@
     <SolidColorBrush x:Key="AccentLightBrush" Color="{StaticResource AccentLightColor}" />
     <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDarkColor}" />
     <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}" />
+    <SolidColorBrush x:Key="AccentHoverGlowBrush" Color="{StaticResource AccentHoverGlowColor}" />
 
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />

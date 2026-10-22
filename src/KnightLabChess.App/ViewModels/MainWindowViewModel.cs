@@ -6,11 +6,14 @@ namespace KnightLabChess.App.ViewModels;
 /// <summary>
 /// Represents a navigation item in the sidebar.
 /// </summary>
-public class NavigationItem
+public partial class NavigationItem : ObservableObject
 {
     public string Title { get; init; } = string.Empty;
     public string Icon { get; init; } = string.Empty;
     public Type ViewModelType { get; init; } = typeof(HomeViewModel);
+
+    [ObservableProperty]
+    private bool _isSelected;
 }
 
 /// <summary>
@@ -44,12 +47,21 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
+        if (NavigationItems.Count > 0)
+        {
+            NavigationItems[0].IsSelected = true;
+        }
     }
 
     [RelayCommand]
     public async Task NavigateTo(NavigationItem item)
     {
         if (item == SelectedNavItem) return;
+
+        foreach (var nav in NavigationItems)
+        {
+            nav.IsSelected = (nav == item);
+        }
 
         try
         {

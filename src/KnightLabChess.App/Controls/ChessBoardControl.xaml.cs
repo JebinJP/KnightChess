@@ -31,11 +31,70 @@ public partial class ChessBoardControl : UserControl
 
     private const double DragThreshold = 6.0;
 
+    public static readonly DependencyProperty MinBoardSizeProperty =
+        DependencyProperty.Register(
+            nameof(MinBoardSize),
+            typeof(double),
+            typeof(ChessBoardControl),
+            new PropertyMetadata(380.0, (d, e) =>
+            {
+                if (d is ChessBoardControl c && e.NewValue is double val)
+                {
+                    c.MinWidth = val;
+                    c.MinHeight = val;
+                }
+            }));
+
+    public double MinBoardSize
+    {
+        get => (double)GetValue(MinBoardSizeProperty);
+        set => SetValue(MinBoardSizeProperty, value);
+    }
+
     public ChessBoardControl()
     {
         InitializeComponent();
+        MinWidth = MinBoardSize;
+        MinHeight = MinBoardSize;
         DataContextChanged += OnDataContextChanged;
         Unloaded += (_, _) => CleanupDrag(true, "Unloaded");
+    }
+
+    public Size CalculateTargetBoardSize(Size constraint)
+    {
+        double availableW = constraint.Width;
+        double availableH = constraint.Height;
+
+        if (double.IsInfinity(availableW) && double.IsInfinity(availableH))
+        {
+            availableW = 600.0;
+            availableH = 600.0;
+        }
+        else if (double.IsInfinity(availableW))
+        {
+            availableW = availableH;
+        }
+        else if (double.IsInfinity(availableH))
+        {
+            availableH = availableW;
+        }
+
+        double boardSize = Math.Max(MinBoardSize, Math.Min(availableW, availableH));
+        return new Size(boardSize, boardSize);
+    }
+
+    protected override Size MeasureOverride(Size constraint)
+    {
+        var squareSize = CalculateTargetBoardSize(constraint);
+        base.MeasureOverride(squareSize);
+        return squareSize;
+    }
+
+    protected override Size ArrangeOverride(Size arrangeBounds)
+    {
+        var squareSize = CalculateTargetBoardSize(arrangeBounds);
+        base.ArrangeOverride(squareSize);
+        return squareSize;
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

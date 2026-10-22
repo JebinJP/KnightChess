@@ -34,10 +34,10 @@
 
             <!-- Top Game Status Header -->
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="10"
                     Padding="16,10"
                     Margin="0,0,0,10">
                 <Grid>
@@ -71,7 +71,7 @@
                                    VerticalAlignment="Center" />
 
                         <!-- Engine Thinking Indicator -->
-                        <Border Background="#2010B981"
+                        <Border Background="{StaticResource AccentSubtleBrush}"
                                 BorderBrush="{StaticResource AccentBrush}"
                                 BorderThickness="1"
                                 CornerRadius="12"
@@ -104,12 +104,12 @@
 
             <!-- Top Player Bar (Above the board, outside Viewbox) -->
             <Border Grid.Row="1"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="12,6"
-                    Margin="0,0,0,6"
+                    Margin="0,0,0,8"
                     Height="42">
                 <DockPanel LastChildFill="True">
                     <!-- Left: Player Info -->
@@ -176,24 +176,21 @@
                 </DockPanel>
             </Border>
 
-            <!-- Board Center Area (Isolated Viewbox: 100% square aspect ratio, permanently stable on capture) -->
-            <Viewbox Grid.Row="2"
-                     Stretch="Uniform"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center"
-                     MaxWidth="720"
-                     MaxHeight="720">
+            <!-- Board Center Area: Maximized responsive square chess board -->
+            <Grid Grid.Row="2"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center">
                 <controls:ChessBoardControl DataContext="{Binding Board}" />
-            </Viewbox>
+            </Grid>
 
             <!-- Bottom Player Bar (Below the board, outside Viewbox) -->
             <Border Grid.Row="3"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="12,6"
-                    Margin="0,6,0,0"
+                    Margin="0,8,0,0"
                     Height="42">
                 <DockPanel LastChildFill="True">
                     <!-- Left: Player Info -->
@@ -289,7 +286,7 @@
                         Margin="0,0,0,6"
                         Visibility="{Binding HasCoachFeedback, Converter={StaticResource BoolToVis}}">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="16" Direction="270" ShadowDepth="3" Color="#10B981" Opacity="0.25" />
+                        <DropShadowEffect BlurRadius="16" Direction="270" ShadowDepth="3" Color="#C89B3C" Opacity="0.25" />
                     </Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -364,10 +361,10 @@
 
             <!-- Match Configuration & Actions Panel -->
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="10"
                     Padding="16"
                     Margin="0,0,0,14">
                 <StackPanel>
@@ -403,7 +400,7 @@
                                             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsHumanVsHuman}" Value="True">
-                                                    <Setter Property="Background" Value="#224CAF50" />
+                                                    <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                     <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -470,7 +467,7 @@
                                             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsHumanVsComputer}" Value="True">
-                                                    <Setter Property="Background" Value="#224CAF50" />
+                                                    <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                     <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -544,7 +541,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsHumanWhite}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -576,7 +573,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsHumanBlack}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -613,7 +610,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsCasualDifficulty}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -642,7 +639,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsIntermediateDifficulty}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -671,7 +668,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsAdvancedDifficulty}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -700,7 +697,7 @@
                                                     <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsMasterDifficulty}" Value="True">
-                                                            <Setter Property="Background" Value="#224CAF50" />
+                                                            <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}" />
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>

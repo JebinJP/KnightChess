@@ -155,7 +155,7 @@
                         </DockPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding GamesWon, StringFormat='{}{0}W'}"
-                                       FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,8,0" />
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" />
                             <TextBlock Text="{Binding GamesLost, StringFormat='{}{0}L'}"
                                        FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,8,0" />
                             <TextBlock Text="{Binding GamesDrawn, StringFormat='{}{0}D'}"
@@ -320,7 +320,9 @@
                                                 <Border DockPanel.Dock="Left"
                                                         Width="40" Height="40"
                                                         CornerRadius="20"
-                                                        Background="#2010B981"
+                                                        Background="{StaticResource AccentSubtleBrush}"
+                                                        BorderBrush="{StaticResource AccentBrush}"
+                                                        BorderThickness="1"
                                                         Margin="0,0,10,0">
                                                     <TextBlock Text="{Binding Icon}"
                                                                FontSize="20"

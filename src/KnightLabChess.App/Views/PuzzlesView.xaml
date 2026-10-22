@@ -25,10 +25,10 @@
 
             <!-- Top Puzzle Header Bar -->
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="10"
                     Padding="18,12"
                     Margin="0,0,0,16">
                 <DockPanel>
@@ -41,7 +41,7 @@
                                    Margin="0,0,14,0" />
 
                         <!-- Theme Badge -->
-                        <Border Background="{StaticResource BackgroundDarkBrush}"
+                        <Border Background="{StaticResource AccentSubtleBrush}"
                                 BorderBrush="{StaticResource AccentBrush}"
                                 BorderThickness="1"
                                 CornerRadius="4"
@@ -75,32 +75,25 @@
                 </DockPanel>
             </Border>
 
-            <!-- Board Center Container -->
-            <Border Grid.Row="1"
-                    Background="{StaticResource BackgroundDarkBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    Padding="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
-                <Viewbox MaxHeight="540" MaxWidth="540" Stretch="Uniform">
-                    <controls:ChessBoardControl DataContext="{Binding Board}" />
-                </Viewbox>
-            </Border>
+            <!-- Board Center Container: Responsive and Maximized -->
+            <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <controls:ChessBoardControl DataContext="{Binding Board}" />
+            </Grid>
         </Grid>
 
         <!-- Right Column: Puzzle Controls & Tactics Panel -->
         <Border Grid.Column="1"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{StaticResource SurfaceGlassBrush}"
+                BorderBrush="{StaticResource GlassBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="22">
             <DockPanel>
                 <!-- Header Stats: Streak & Solved Count -->
                 <Border DockPanel.Dock="Top"
-                        Background="{StaticResource BackgroundDarkBrush}"
+                        Background="{StaticResource SurfaceGlassBrush}"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
+                        BorderThickness="1"
                         CornerRadius="8"
                         Padding="14,10"
                         Margin="0,0,0,18">

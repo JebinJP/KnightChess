@@ -13,14 +13,15 @@
             BorderThickness="1"
             CornerRadius="14"
             Padding="8"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center">
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
         <Border.Effect>
             <DropShadowEffect BlurRadius="28" Direction="270" ShadowDepth="6" Color="#000000" Opacity="0.45" />
         </Border.Effect>
 
         <Grid x:Name="BoardContainerGrid"
-              Width="560" Height="560"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
               Background="Transparent"
               Focusable="True"
               PreviewMouseLeftButtonDown="Board_PreviewMouseLeftButtonDown"
@@ -33,9 +34,8 @@
             <!-- 8x8 Board Squares -->
             <ItemsControl x:Name="SquaresItemsControl"
                           ItemsSource="{Binding Squares}"
-                          Width="560" Height="560"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center">
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Rows="8" Columns="8" />
@@ -106,22 +106,23 @@
                                                                 <Condition Binding="{Binding IsLegalMove}" Value="True" />
                                                                 <Condition Binding="{Binding HasPiece}" Value="False" />
                                                             </MultiDataTrigger.Conditions>
-                                                             <Setter Property="Visibility" Value="Visible" />
+                                                            <Setter Property="Visibility" Value="Visible" />
                                                         </MultiDataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Ellipse.Style>
                                         </Ellipse>
 
-                                        <!-- Capture Legal Move Target Ring (Refined concentric circular frame) -->
-                                        <Ellipse Width="56" Height="56"
-                                                 Stroke="#55000000"
-                                                 StrokeThickness="5"
-                                                 HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center"
-                                                 IsHitTestVisible="False">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
+                                        <!-- Capture Legal Move Target Ring (Responsive concentric circular frame) -->
+                                        <Border CornerRadius="999"
+                                                Margin="6"
+                                                BorderBrush="#50000000"
+                                                BorderThickness="4.5"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                IsHitTestVisible="False">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
                                                     <Setter Property="Visibility" Value="Collapsed" />
                                                     <Style.Triggers>
                                                         <MultiDataTrigger>
@@ -133,13 +134,15 @@
                                                         </MultiDataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
+                                            </Border.Style>
+                                        </Border>
 
                                         <!-- Piece Representation (High Quality Vector DrawingImage) -->
                                         <Image Source="{Binding PieceKey, Converter={StaticResource DrawingKeyConverter}}"
                                                Stretch="Uniform"
                                                Margin="4"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
                                                Visibility="{Binding HasPiece, Converter={StaticResource BoolToVis}}"
                                                IsHitTestVisible="False"
                                                RenderOptions.BitmapScalingMode="HighQuality">
@@ -170,11 +173,11 @@
 
             <!-- Drag Adorner / Floating Piece Overlay Canvas -->
             <Canvas x:Name="DragCanvas"
-                    Width="560" Height="560"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
                     IsHitTestVisible="False"
                     ClipToBounds="False">
                 <Image x:Name="GhostPiece"
-                       Width="64" Height="64"
                        Stretch="Uniform"
                        Visibility="Collapsed"
                        RenderOptions.BitmapScalingMode="HighQuality">

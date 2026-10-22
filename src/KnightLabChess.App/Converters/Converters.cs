@@ -33,12 +33,12 @@ public class BoolToVisibilityConverter : IValueConverter
 /// </summary>
 public class SquareBackgroundConverter : IMultiValueConverter
 {
-    private static readonly SolidColorBrush LightSquareBrush = new(Color.FromRgb(240, 217, 181));
-    private static readonly SolidColorBrush DarkSquareBrush = new(Color.FromRgb(181, 136, 99));
-    private static readonly SolidColorBrush SelectedBrush = new(Color.FromArgb(200, 247, 236, 105));
-    private static readonly SolidColorBrush LastMoveLightBrush = new(Color.FromRgb(205, 210, 106));
-    private static readonly SolidColorBrush LastMoveDarkBrush = new(Color.FromRgb(170, 162, 58));
-    private static readonly SolidColorBrush CheckBrush = new(Color.FromArgb(215, 229, 57, 53));
+    private static readonly SolidColorBrush LightSquareBrush = new(Color.FromRgb(238, 238, 210));
+    private static readonly SolidColorBrush DarkSquareBrush = new(Color.FromRgb(118, 150, 86));
+    private static readonly SolidColorBrush SelectedBrush = new(Color.FromArgb(210, 246, 235, 100));
+    private static readonly SolidColorBrush LastMoveLightBrush = new(Color.FromRgb(245, 246, 130));
+    private static readonly SolidColorBrush LastMoveDarkBrush = new(Color.FromRgb(186, 202, 68));
+    private static readonly SolidColorBrush CheckBrush = new(Color.FromArgb(220, 229, 57, 53));
 
     static SquareBackgroundConverter()
     {
@@ -102,8 +102,8 @@ public class DrawingKeyConverter : IValueConverter
 /// </summary>
 public class BoardCoordinateBrushConverter : IValueConverter
 {
-    private static readonly SolidColorBrush DarkCoordBrush = new(Color.FromRgb(181, 136, 99));
-    private static readonly SolidColorBrush LightCoordBrush = new(Color.FromRgb(240, 217, 181));
+    private static readonly SolidColorBrush DarkCoordBrush = new(Color.FromRgb(118, 150, 86));
+    private static readonly SolidColorBrush LightCoordBrush = new(Color.FromRgb(238, 238, 210));
 
     static BoardCoordinateBrushConverter()
     {

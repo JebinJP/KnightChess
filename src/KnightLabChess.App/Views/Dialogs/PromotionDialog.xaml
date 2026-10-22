@@ -10,11 +10,14 @@
         Background="Transparent"
         KeyDown="Window_KeyDown">
 
-    <Border Background="{StaticResource SurfaceBrush}"
+    <Border Background="{StaticResource SurfaceGlassBrush}"
             BorderBrush="{StaticResource AccentBrush}"
-            BorderThickness="2"
-            CornerRadius="12"
+            BorderThickness="1.5"
+            CornerRadius="14"
             Padding="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="32" Direction="270" ShadowDepth="8" Color="#000000" Opacity="0.75" />
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

@@ -156,7 +156,9 @@
                                                            Foreground="{StaticResource TextSecondaryBrush}" />
                                             </Border>
                                             <!-- Completed Badge -->
-                                            <Border Background="#1A10B981"
+                                            <Border Background="{StaticResource AccentSubtleBrush}"
+                                                    BorderBrush="{StaticResource AccentBrush}"
+                                                    BorderThickness="1"
                                                     CornerRadius="4"
                                                     Padding="8,3"
                                                     Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}">
@@ -222,10 +224,10 @@
 
                 <!-- Navigation Back Bar -->
                 <Border Grid.Row="0"
-                        Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
+                        Background="{StaticResource SurfaceGlassBrush}"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="8"
+                        CornerRadius="10"
                         Padding="16,10"
                         Margin="0,0,0,16">
                     <DockPanel>
@@ -242,25 +244,16 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Chess Board -->
-                <Border Grid.Row="1"
-                        Background="{StaticResource BackgroundDarkBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        Padding="16"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Viewbox MaxHeight="540" MaxWidth="540" Stretch="Uniform">
-                        <controls:ChessBoardControl DataContext="{Binding LessonBoard}" />
-                    </Viewbox>
-                </Border>
+                <!-- Chess Board: Responsive and Maximized -->
+                <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <controls:ChessBoardControl DataContext="{Binding LessonBoard}" />
+                </Grid>
             </Grid>
 
             <!-- Right: Interactive Lesson Step Panel -->
             <Border Grid.Column="1"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="10"
                     Padding="24">

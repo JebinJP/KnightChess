@@ -20,10 +20,10 @@
 
             <!-- Top Header & Action Controls -->
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="10"
                     Padding="20,14"
                     Margin="0,0,0,16">
                 <DockPanel>
@@ -57,10 +57,10 @@
 
             <!-- Feedback Message Banner -->
             <Border Grid.Row="1"
-                    Background="#1E2B24"
+                    Background="{StaticResource AccentSubtleBrush}"
                     BorderBrush="{StaticResource AccentBrush}"
                     BorderThickness="1"
-                    CornerRadius="6"
+                    CornerRadius="8"
                     Padding="14,10"
                     Margin="0,0,0,16"
                     Visibility="{Binding FeedbackMessage, Converter={StaticResource BoolToVis}}">
@@ -81,10 +81,10 @@
 
                 <!-- Left Column: Engine Settings -->
                 <StackPanel Grid.Column="0">
-                    <Border Background="{StaticResource SurfaceBrush}"
-                            BorderBrush="{StaticResource BorderBrush}"
+                    <Border Background="{StaticResource SurfaceGlassBrush}"
+                            BorderBrush="{StaticResource GlassBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             Padding="20"
                             Margin="0,0,0,20">
                         <StackPanel>
@@ -329,10 +329,10 @@
                 <!-- Right Column: Board Visuals, Audio & Storage -->
                 <StackPanel Grid.Column="2">
                     <!-- Board & Visuals Card -->
-                    <Border Background="{StaticResource SurfaceBrush}"
-                            BorderBrush="{StaticResource BorderBrush}"
+                    <Border Background="{StaticResource SurfaceGlassBrush}"
+                            BorderBrush="{StaticResource GlassBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             Padding="20"
                             Margin="0,0,0,20">
                         <StackPanel>
@@ -427,10 +427,10 @@
                     </Border>
 
                     <!-- Storage & System Info Card -->
-                    <Border Background="{StaticResource SurfaceBrush}"
-                            BorderBrush="{StaticResource BorderBrush}"
+                    <Border Background="{StaticResource SurfaceGlassBrush}"
+                            BorderBrush="{StaticResource GlassBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             Padding="20">
                         <StackPanel>
                             <TextBlock Text="System &amp; Storage"

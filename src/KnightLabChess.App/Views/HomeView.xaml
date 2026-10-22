@@ -6,8 +6,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="32" MaxWidth="1100" HorizontalAlignment="Stretch">
             <!-- Welcome Header -->
-            <Border Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+            <Border Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="12"
                     Padding="28"
@@ -43,9 +43,9 @@
             </Border>
 
             <!-- Quick Action Card -->
-            <Border Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource AccentDarkBrush}"
-                    BorderThickness="1.5"
+            <Border Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1"
                     CornerRadius="10"
                     Padding="22"
                     Margin="0,0,0,24">
@@ -73,8 +73,8 @@
             <!-- Status & Stats Row -->
             <UniformGrid Columns="3" Margin="0,0,0,24">
                 <!-- Stat 1 -->
-                <Border Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
+                <Border Background="{StaticResource SurfaceGlassBrush}"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="18"
@@ -91,8 +91,8 @@
                 </Border>
 
                 <!-- Stat 2 -->
-                <Border Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
+                <Border Background="{StaticResource SurfaceGlassBrush}"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="18"
@@ -109,8 +109,8 @@
                 </Border>
 
                 <!-- Stat 3 -->
-                <Border Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource BorderBrush}"
+                <Border Background="{StaticResource SurfaceGlassBrush}"
+                        BorderBrush="{StaticResource GlassBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="18"
@@ -128,8 +128,8 @@
             </UniformGrid>
 
             <!-- Continue Learning Academy Card -->
-            <Border Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}"
+            <Border Background="{StaticResource SurfaceGlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="10"
                     Padding="24"
