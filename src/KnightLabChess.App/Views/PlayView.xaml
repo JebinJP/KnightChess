@@ -716,11 +716,18 @@
 
                     <Separator Background="{StaticResource BorderBrush}" Margin="0,2,0,10" />
 
-                    <Button Content="{Binding AskCoachButtonText}"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            Command="{Binding RequestCoachAdviceCommand}"
-                            Margin="0,0,0,10"
-                            ToolTip="Receive pedagogical advice grounded in verified engine analysis" />
+                    <UniformGrid Columns="2" Margin="0,0,0,10">
+                        <Button Content="{Binding AskCoachButtonText}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding RequestCoachAdviceCommand}"
+                                Margin="0,0,4,0"
+                                ToolTip="Receive pedagogical advice grounded in verified engine analysis" />
+                        <Button Content="✦ Open AI Coach"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding OpenInAiCoachAsyncCommand}"
+                                Margin="4,0,0,0"
+                                ToolTip="Transfer game position to dedicated AI Coach workstation" />
+                    </UniformGrid>
 
                     <TextBlock Text="MATCH CONTROLS"
                                Style="{StaticResource CaptionTextStyle}"

@@ -36,6 +36,7 @@ public partial class MainWindowViewModel : ObservableObject
     [
         new() { Title = "Home", Icon = "⌂", ViewModelType = typeof(HomeViewModel) },
         new() { Title = "Play Chess", Icon = "♟", ViewModelType = typeof(PlayViewModel) },
+        new() { Title = "AI Coach", Icon = "✦", ViewModelType = typeof(AiCoachViewModel) },
         new() { Title = "Learn", Icon = "📖", ViewModelType = typeof(LearnViewModel) },
         new() { Title = "Puzzles", Icon = "🧩", ViewModelType = typeof(PuzzlesViewModel) },
         new() { Title = "Analysis", Icon = "🔍", ViewModelType = typeof(AnalysisViewModel) },

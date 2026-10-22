@@ -15,6 +15,7 @@ public partial class AnalysisViewModel : PageViewModelBase
     private readonly IEngineService _engineService;
     private readonly IAiCoachService? _coachService;
     private readonly IAudioService? _audioService;
+    private readonly IServiceProvider? _serviceProvider;
     private CancellationTokenSource? _evalCts;
     private CancellationTokenSource? _coachCts;
     private EngineEvaluation? _lastEvaluation;
@@ -34,11 +35,16 @@ public partial class AnalysisViewModel : PageViewModelBase
     [ObservableProperty] private bool _isCoachThinking;
     [ObservableProperty] private string _askCoachButtonText = "✦ Ask Coach";
 
-    public AnalysisViewModel(IEngineService engineService, IAiCoachService? coachService = null, IAudioService? audioService = null)
+    public AnalysisViewModel(
+        IEngineService engineService,
+        IAiCoachService? coachService = null,
+        IAudioService? audioService = null,
+        IServiceProvider? serviceProvider = null)
     {
         _engineService = engineService;
         _coachService = coachService;
         _audioService = audioService;
+        _serviceProvider = serviceProvider;
         _board = new ChessBoardViewModel(audioService);
         PageTitle = "Analysis";
         PageIcon = "🔍";
@@ -92,6 +98,22 @@ public partial class AnalysisViewModel : PageViewModelBase
         {
             IsCoachThinking = false;
             AskCoachButtonText = "✦ Ask Coach";
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenInAiCoachAsync()
+    {
+        if (_serviceProvider == null) return;
+        var mainVm = _serviceProvider.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+        var coachVm = _serviceProvider.GetService(typeof(AiCoachViewModel)) as AiCoachViewModel;
+        if (coachVm != null)
+        {
+            await coachVm.LoadPositionForCoachingAsync(Board.CurrentFen, Board.Game.MoveHistoryUci);
+        }
+        if (mainVm != null)
+        {
+            await mainVm.NavigateToPage<AiCoachViewModel>();
         }
     }
 

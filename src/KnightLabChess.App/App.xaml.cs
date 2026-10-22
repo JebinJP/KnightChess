@@ -161,6 +161,7 @@ public partial class App : Application
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<PlayViewModel>();
+        services.AddTransient<AiCoachViewModel>();
         services.AddTransient<LearnViewModel>();
         services.AddTransient<PuzzlesViewModel>();
         services.AddTransient<AnalysisViewModel>();

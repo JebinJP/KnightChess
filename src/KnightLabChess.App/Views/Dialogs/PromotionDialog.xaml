@@ -14,7 +14,38 @@
             BorderBrush="{StaticResource AccentBrush}"
             BorderThickness="1.5"
             CornerRadius="14"
-            Padding="20">
+            Padding="20"
+            RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="DialogScale" ScaleX="1.0" ScaleY="1.0" />
+        </Border.RenderTransform>
+        <Border.Triggers>
+            <EventTrigger RoutedEvent="Border.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                         From="0.0" To="1.0"
+                                         Duration="0:0:0.14" />
+                        <DoubleAnimation Storyboard.TargetName="DialogScale"
+                                         Storyboard.TargetProperty="ScaleX"
+                                         From="0.94" To="1.0"
+                                         Duration="0:0:0.14">
+                            <DoubleAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut" />
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                        <DoubleAnimation Storyboard.TargetName="DialogScale"
+                                         Storyboard.TargetProperty="ScaleY"
+                                         From="0.94" To="1.0"
+                                         Duration="0:0:0.14">
+                            <DoubleAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut" />
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Border.Triggers>
         <Border.Effect>
             <DropShadowEffect BlurRadius="32" Direction="270" ShadowDepth="8" Color="#000000" Opacity="0.75" />
         </Border.Effect>

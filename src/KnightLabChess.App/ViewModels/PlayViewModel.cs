@@ -19,6 +19,7 @@ public partial class PlayViewModel : PageViewModelBase
     private readonly IEngineService _engineService;
     private readonly IAudioService? _audioService;
     private readonly IAiCoachService? _coachService;
+    private readonly IServiceProvider? _serviceProvider;
     private CancellationTokenSource? _coachCts;
     private CancellationTokenSource? _engineCts;
 
@@ -116,12 +117,14 @@ public partial class PlayViewModel : PageViewModelBase
         IGameRepository gameRepository,
         IEngineService engineService,
         IAudioService? audioService = null,
-        IAiCoachService? coachService = null)
+        IAiCoachService? coachService = null,
+        IServiceProvider? serviceProvider = null)
     {
         _gameRepository = gameRepository;
         _engineService = engineService;
         _audioService = audioService;
         _coachService = coachService;
+        _serviceProvider = serviceProvider;
         _board = new ChessBoardViewModel(audioService);
         PageTitle = "Play Chess";
         PageIcon = "♟";
@@ -154,6 +157,22 @@ public partial class PlayViewModel : PageViewModelBase
     {
         HasCoachFeedback = false;
         LatestCoachFeedback = null;
+    }
+
+    [RelayCommand]
+    public async Task OpenInAiCoachAsync()
+    {
+        if (_serviceProvider == null) return;
+        var mainVm = _serviceProvider.GetService(typeof(MainWindowViewModel)) as MainWindowViewModel;
+        var coachVm = _serviceProvider.GetService(typeof(AiCoachViewModel)) as AiCoachViewModel;
+        if (coachVm != null)
+        {
+            await coachVm.LoadPositionForCoachingAsync(Board.CurrentFen, Board.Game.MoveHistoryUci);
+        }
+        if (mainVm != null)
+        {
+            await mainVm.NavigateToPage<AiCoachViewModel>();
+        }
     }
 
     [RelayCommand]

@@ -598,4 +598,218 @@ public class DragAndDropInteractionTests
             Assert.Equal(720, control.RenderSize.Height);
         });
     }
+
+    [Fact]
+    public void Part3_ClickToMove_DispatchesMoveExecuted_WithIsUserDragFalse()
+    {
+        var vm = new ChessBoardViewModel();
+        MoveExecutedEventArgs? dispatchedArgs = null;
+        vm.MoveExecuted += (_, args) => dispatchedArgs = args;
+
+        var e2 = GetSquare(vm, "e2");
+        var e4 = GetSquare(vm, "e4");
+
+        vm.SelectSquare(e2);
+        vm.SelectSquare(e4);
+
+        Assert.NotNull(dispatchedArgs);
+        Assert.False(dispatchedArgs!.IsUserDrag);
+        Assert.Equal("e2", dispatchedArgs.Move.From.ToString());
+        Assert.Equal("e4", dispatchedArgs.Move.To.ToString());
+        Assert.Equal("e4", dispatchedArgs.Move.San);
+    }
+
+    [Fact]
+    public void Part3_DragAndDrop_DispatchesMoveExecuted_WithIsUserDragTrue()
+    {
+        var vm = new ChessBoardViewModel();
+        MoveExecutedEventArgs? dispatchedArgs = null;
+        vm.MoveExecuted += (_, args) => dispatchedArgs = args;
+
+        var d2 = GetSquare(vm, "d2");
+        var d4 = GetSquare(vm, "d4");
+
+        bool moved = vm.TryExecuteMove(d2, d4, isUserDrag: true);
+
+        Assert.True(moved);
+        Assert.NotNull(dispatchedArgs);
+        Assert.True(dispatchedArgs!.IsUserDrag);
+        Assert.Equal("d2", dispatchedArgs.Move.From.ToString());
+        Assert.Equal("d4", dispatchedArgs.Move.To.ToString());
+    }
+
+    [Fact]
+    public void Part3_EngineMakeMove_DispatchesMoveExecuted_WithIsUserDragFalse()
+    {
+        var vm = new ChessBoardViewModel();
+        MoveExecutedEventArgs? dispatchedArgs = null;
+        vm.MoveExecuted += (_, args) => dispatchedArgs = args;
+
+        bool moved = vm.MakeMove("e2e4");
+
+        Assert.True(moved);
+        Assert.NotNull(dispatchedArgs);
+        Assert.False(dispatchedArgs!.IsUserDrag);
+        Assert.Equal("e2", dispatchedArgs.Move.From.ToString());
+        Assert.Equal("e4", dispatchedArgs.Move.To.ToString());
+    }
+
+    [Fact]
+    public void Part3_IllegalMove_DoesNotDispatchMoveExecuted_NorMutateBoard()
+    {
+        var vm = new ChessBoardViewModel();
+        bool eventFired = false;
+        vm.MoveExecuted += (_, _) => eventFired = true;
+
+        var e2 = GetSquare(vm, "e2");
+        var e5 = GetSquare(vm, "e5"); // Illegal 3-square jump
+
+        bool moved = vm.TryExecuteMove(e2, e5, isUserDrag: true);
+
+        Assert.False(moved);
+        Assert.False(eventFired);
+        Assert.True(vm.IsWhiteTurn);
+        Assert.True(GetSquare(vm, "e2").HasPiece);
+        Assert.False(GetSquare(vm, "e5").HasPiece);
+    }
+
+    [Fact]
+    public void Part3_BoardRefreshed_FiresOnUndoFlipAndNewGame()
+    {
+        var vm = new ChessBoardViewModel();
+        int refreshCount = 0;
+        vm.BoardRefreshed += (_, _) => refreshCount++;
+
+        // 1. Move and Undo
+        vm.TryExecuteMove(GetSquare(vm, "e2"), GetSquare(vm, "e4"));
+        vm.UndoMove();
+        Assert.Equal(1, refreshCount);
+
+        // 2. Flip board
+        vm.FlipBoard();
+        Assert.Equal(2, refreshCount);
+
+        // 3. New game
+        vm.NewGame();
+        Assert.Equal(3, refreshCount);
+    }
+
+    [Fact]
+    public void Part3_CastlingMove_MoveRecordContainsCastlingMetadata()
+    {
+        var vm = new ChessBoardViewModel();
+        // Setup position for White kingside castle: clear e2-e4, e7-e5, g1-f3, b8-c6, f1-c4, g8-f6
+        vm.MakeMove("e2e4");
+        vm.MakeMove("e7e5");
+        vm.MakeMove("g1f3");
+        vm.MakeMove("b8c6");
+        vm.MakeMove("f1c4");
+        vm.MakeMove("g8f6");
+
+        MoveExecutedEventArgs? castleArgs = null;
+        vm.MoveExecuted += (_, args) => castleArgs = args;
+
+        // Execute Kingside castle e1 -> g1
+        var e1 = GetSquare(vm, "e1");
+        var g1 = GetSquare(vm, "g1");
+        bool moved = vm.TryExecuteMove(e1, g1, isUserDrag: false);
+
+        Assert.True(moved);
+        Assert.NotNull(castleArgs);
+        Assert.True(castleArgs!.Move.IsCastling);
+        Assert.Equal("O-O", castleArgs.Move.San);
+
+        // Verify King on g1, Rook on f1
+        Assert.True(GetSquare(vm, "g1").HasPiece);
+        Assert.Equal("WhiteKingDrawing", GetSquare(vm, "g1").PieceKey);
+        Assert.True(GetSquare(vm, "f1").HasPiece);
+        Assert.Equal("WhiteRookDrawing", GetSquare(vm, "f1").PieceKey);
+    }
+
+    [Fact]
+    public void Part3_CaptureMove_MoveRecordContainsCapturedPieceMetadata()
+    {
+        var vm = new ChessBoardViewModel();
+        vm.MakeMove("e2e4");
+        vm.MakeMove("d7d5");
+
+        MoveExecutedEventArgs? captureArgs = null;
+        vm.MoveExecuted += (_, args) => captureArgs = args;
+
+        var e4 = GetSquare(vm, "e4");
+        var d5 = GetSquare(vm, "d5");
+        bool captured = vm.TryExecuteMove(e4, d5, isUserDrag: true);
+
+        Assert.True(captured);
+        Assert.NotNull(captureArgs);
+        Assert.NotNull(captureArgs!.Move.CapturedPiece);
+        Assert.Equal(PieceType.Pawn, captureArgs.Move.CapturedPiece!.Type);
+        Assert.Equal(PieceColor.Black, captureArgs.Move.CapturedPiece!.Color);
+    }
+
+    [Fact]
+    public void Part3_PawnPromotion_MoveRecordContainsPromotionMetadata()
+    {
+        // Setup position with pawn on 7th rank ready to promote
+        var game = new GeraChessGameAdapter("8/4P3/8/8/8/8/8/4K2k w - - 0 1");
+        var vm = new ChessBoardViewModel(game);
+        vm.PromptPromotion = (_) => PieceType.Queen;
+
+        MoveExecutedEventArgs? promoArgs = null;
+        vm.MoveExecuted += (_, args) => promoArgs = args;
+
+        var e7 = GetSquare(vm, "e7");
+        var e8 = GetSquare(vm, "e8");
+        bool moved = vm.TryExecuteMove(e7, e8, isUserDrag: false);
+
+        Assert.True(moved);
+        Assert.NotNull(promoArgs);
+        Assert.True(promoArgs!.Move.IsPromotion);
+        Assert.Equal(PieceType.Queen, promoArgs.Move.Promotion);
+        Assert.Equal("WhiteQueenDrawing", GetSquare(vm, "e8").PieceKey);
+    }
+
+    [Fact]
+    public void Part3_UI_ChessBoardControl_LifecycleAndAnimationCancellation()
+    {
+        RunInSta(() =>
+        {
+            var control = new KnightLabChess.App.Controls.ChessBoardControl();
+            var vm = new ChessBoardViewModel();
+            control.DataContext = vm;
+
+            var e4 = GetSquare(vm, "e4");
+            e4.IsBeingAnimated = true;
+            Assert.True(e4.IsBeingAnimated);
+
+            // Invoking private StopCurrentAnimation via reflection
+            var stopMethod = typeof(KnightLabChess.App.Controls.ChessBoardControl)
+                .GetMethod("StopCurrentAnimation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Assert.NotNull(stopMethod);
+            stopMethod!.Invoke(control, null);
+
+            // Square must be cleanly unflagged
+            Assert.False(e4.IsBeingAnimated);
+        });
+    }
+
+    [Fact]
+    public void Part3_ShowMoveAnimations_Property_TogglesStateCorrectly()
+    {
+        RunInSta(() =>
+        {
+            var control = new KnightLabChess.App.Controls.ChessBoardControl();
+            var vm = new ChessBoardViewModel();
+            control.DataContext = vm;
+
+            Assert.True(control.ShowMoveAnimations);
+            Assert.True(vm.ShowMoveAnimations);
+
+            control.ShowMoveAnimations = false;
+            Assert.False(control.ShowMoveAnimations);
+
+            vm.ShowMoveAnimations = false;
+            Assert.False(vm.ShowMoveAnimations);
+        });
+    }
 }

@@ -38,7 +38,7 @@ public class SquareBackgroundConverter : IMultiValueConverter
     private static readonly SolidColorBrush SelectedBrush = new(Color.FromArgb(210, 246, 235, 100));
     private static readonly SolidColorBrush LastMoveLightBrush = new(Color.FromRgb(245, 246, 130));
     private static readonly SolidColorBrush LastMoveDarkBrush = new(Color.FromRgb(186, 202, 68));
-    private static readonly SolidColorBrush CheckBrush = new(Color.FromArgb(220, 229, 57, 53));
+    private static readonly Brush CheckBrush;
 
     static SquareBackgroundConverter()
     {
@@ -47,7 +47,19 @@ public class SquareBackgroundConverter : IMultiValueConverter
         SelectedBrush.Freeze();
         LastMoveLightBrush.Freeze();
         LastMoveDarkBrush.Freeze();
-        CheckBrush.Freeze();
+
+        var checkRadial = new RadialGradientBrush
+        {
+            GradientOrigin = new Point(0.5, 0.5),
+            Center = new Point(0.5, 0.5),
+            RadiusX = 0.55,
+            RadiusY = 0.55
+        };
+        checkRadial.GradientStops.Add(new GradientStop(Color.FromArgb(235, 230, 50, 50), 0.0));
+        checkRadial.GradientStops.Add(new GradientStop(Color.FromArgb(200, 210, 45, 45), 0.65));
+        checkRadial.GradientStops.Add(new GradientStop(Color.FromArgb(160, 180, 35, 35), 1.0));
+        checkRadial.Freeze();
+        CheckBrush = checkRadial;
     }
 
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

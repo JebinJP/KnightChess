@@ -4,14 +4,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using KnightLabChess.App.ViewModels;
 using KnightLabChess.App.Views.Dialogs;
+using KnightLabChess.Core.Models;
 
 namespace KnightLabChess.App.Controls;
 
 /// <summary>
 /// Interaction logic for ChessBoardControl.xaml.
-/// Implements dual-mode interaction: legal drag-and-drop piece movement and click-click selection.
+/// Implements dual-mode interaction: legal drag-and-drop piece movement and click-click selection,
+/// paired with high-performance WPF piece movement animations, castling slides, and capture ripple effects.
 /// Managed via an explicit drag-and-drop state machine (Idle -> Pending -> Dragging).
 /// </summary>
 public partial class ChessBoardControl : UserControl
@@ -30,6 +33,12 @@ public partial class ChessBoardControl : UserControl
     private bool _isReleasingCapture;
 
     private const double DragThreshold = 6.0;
+
+    // Active animation state
+    private Storyboard? _activeMoveStoryboard;
+    private Storyboard? _activeRippleStoryboard;
+    private BoardSquareViewModel? _animatingSquare;
+    private BoardSquareViewModel? _animatingRookSquare;
 
     public static readonly DependencyProperty MinBoardSizeProperty =
         DependencyProperty.Register(
@@ -51,13 +60,31 @@ public partial class ChessBoardControl : UserControl
         set => SetValue(MinBoardSizeProperty, value);
     }
 
+    public static readonly DependencyProperty ShowMoveAnimationsProperty =
+        DependencyProperty.Register(
+            nameof(ShowMoveAnimations),
+            typeof(bool),
+            typeof(ChessBoardControl),
+            new PropertyMetadata(true));
+
+    public bool ShowMoveAnimations
+    {
+        get => (bool)GetValue(ShowMoveAnimationsProperty);
+        set => SetValue(ShowMoveAnimationsProperty, value);
+    }
+
     public ChessBoardControl()
     {
         InitializeComponent();
         MinWidth = MinBoardSize;
         MinHeight = MinBoardSize;
         DataContextChanged += OnDataContextChanged;
-        Unloaded += (_, _) => CleanupDrag(true, "Unloaded");
+        Unloaded += (_, _) =>
+        {
+            CleanupDrag(true, "Unloaded");
+            StopCurrentAnimation();
+        };
+        SizeChanged += (_, _) => StopCurrentAnimation();
     }
 
     public Size CalculateTargetBoardSize(Size constraint)
@@ -99,22 +126,368 @@ public partial class ChessBoardControl : UserControl
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        if (e.OldValue is ChessBoardViewModel oldVm)
+        {
+            oldVm.MoveExecuted -= OnMoveExecuted;
+            oldVm.BoardRefreshed -= OnBoardRefreshed;
+        }
+
+        StopCurrentAnimation();
         CleanupDrag(true, "DataContextChanged");
 
-        if (e.NewValue is ChessBoardViewModel vm && vm.PromptPromotion is null)
+        if (e.NewValue is ChessBoardViewModel vm)
         {
-            vm.PromptPromotion = (color) =>
+            vm.MoveExecuted += OnMoveExecuted;
+            vm.BoardRefreshed += OnBoardRefreshed;
+
+            if (vm.PromptPromotion is null)
             {
-                var parentWindow = Window.GetWindow(this);
-                var dlg = new PromotionDialog(color);
-                if (parentWindow != null)
+                vm.PromptPromotion = (color) =>
                 {
-                    dlg.Owner = parentWindow;
-                }
-                var result = dlg.ShowDialog();
-                return result == true ? dlg.SelectedPieceType : null;
-            };
+                    var parentWindow = Window.GetWindow(this);
+                    var dlg = new PromotionDialog(color);
+                    if (parentWindow != null)
+                    {
+                        dlg.Owner = parentWindow;
+                    }
+                    var result = dlg.ShowDialog();
+                    return result == true ? dlg.SelectedPieceType : null;
+                };
+            }
         }
+    }
+
+    private void OnBoardRefreshed(object? sender, EventArgs e)
+    {
+        StopCurrentAnimation();
+    }
+
+    private void OnMoveExecuted(object? sender, MoveExecutedEventArgs e)
+    {
+        if (DataContext is not ChessBoardViewModel vm) return;
+
+        bool animationsAllowed = ShowMoveAnimations && vm.ShowMoveAnimations;
+        bool isCapture = e.Move.CapturedPiece != null || e.Move.IsEnPassant;
+
+        if (!animationsAllowed)
+        {
+            StopCurrentAnimation();
+            if (isCapture)
+            {
+                PlayCaptureRipple(vm, e.Move.To.File, e.Move.To.Rank);
+            }
+            return;
+        }
+
+        // If the move was performed via physical drag-and-drop:
+        if (e.IsUserDrag)
+        {
+            StopCurrentAnimation();
+
+            // When castling was initiated by drag-and-drop, the user placed the King.
+            // Smoothly slide the Rook into its final position beside the King.
+            if (e.Move.IsCastling)
+            {
+                AnimateCastlingRookOnly(vm, e.Move);
+            }
+
+            if (isCapture)
+            {
+                PlayCaptureRipple(vm, e.Move.To.File, e.Move.To.Rank);
+            }
+            return;
+        }
+
+        // Otherwise (click-to-move, computer engine move, puzzle, lesson):
+        AnimateFullMove(vm, e.Move);
+    }
+
+    private void StopCurrentAnimation()
+    {
+        if (_activeMoveStoryboard != null)
+        {
+            try
+            {
+                _activeMoveStoryboard.Stop();
+            }
+            catch { }
+            _activeMoveStoryboard = null;
+        }
+
+        if (_activeRippleStoryboard != null)
+        {
+            try
+            {
+                _activeRippleStoryboard.Stop();
+            }
+            catch { }
+            _activeRippleStoryboard = null;
+        }
+
+        if (_animatingSquare != null)
+        {
+            _animatingSquare.IsBeingAnimated = false;
+            _animatingSquare = null;
+        }
+
+        if (_animatingRookSquare != null)
+        {
+            _animatingRookSquare.IsBeingAnimated = false;
+            _animatingRookSquare = null;
+        }
+
+        // Safety sweep to guarantee zero squares remain visually invisible
+        if (DataContext is ChessBoardViewModel vm)
+        {
+            foreach (var sq in vm.Squares)
+            {
+                if (sq.IsBeingAnimated)
+                {
+                    sq.IsBeingAnimated = false;
+                }
+            }
+        }
+
+        AnimatedPiece.Visibility = Visibility.Collapsed;
+        AnimatedPiece.Source = null;
+        AnimatedPiece2.Visibility = Visibility.Collapsed;
+        AnimatedPiece2.Source = null;
+        CaptureRippleRing.Visibility = Visibility.Collapsed;
+    }
+
+    private void AnimateFullMove(ChessBoardViewModel vm, MoveRecord move)
+    {
+        StopCurrentAnimation();
+
+        var destSq = FindSquare(vm, move.To.File, move.To.Rank);
+        if (destSq == null) return;
+
+        string pieceColor = move.Color == PieceColor.White ? "White" : "Black";
+        PieceType effectivePiece = move.Promotion ?? move.PieceType;
+        string pieceKey = $"{pieceColor}{effectivePiece}Drawing";
+        var img = ResolvePieceImage(pieceKey);
+        if (img == null) return;
+
+        var boardSize = GetBoardDisplaySize();
+        double sqWidth = boardSize.Width / 8.0;
+        double sqHeight = boardSize.Height / 8.0;
+        double pieceSize = Math.Max(32, Math.Min(sqWidth, sqHeight) * 0.90);
+
+        Point fromCenter = GetSquareCenter(vm, move.From.File, move.From.Rank);
+        Point toCenter = GetSquareCenter(vm, move.To.File, move.To.Rank);
+
+        double fromX = fromCenter.X - pieceSize / 2.0;
+        double fromY = fromCenter.Y - pieceSize / 2.0;
+        double toX = toCenter.X - pieceSize / 2.0;
+        double toY = toCenter.Y - pieceSize / 2.0;
+
+        AnimatedPiece.Source = img;
+        AnimatedPiece.Width = pieceSize;
+        AnimatedPiece.Height = pieceSize;
+        AnimatedPiece.Visibility = Visibility.Visible;
+        Canvas.SetLeft(AnimatedPiece, fromX);
+        Canvas.SetTop(AnimatedPiece, fromY);
+
+        _animatingSquare = destSq;
+        destSq.IsBeingAnimated = true;
+
+        var sb = new Storyboard();
+        var duration = TimeSpan.FromMilliseconds(160);
+        var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        var animX = new DoubleAnimation(fromX, toX, duration) { EasingFunction = cubicEase };
+        var animY = new DoubleAnimation(fromY, toY, duration) { EasingFunction = cubicEase };
+
+        Storyboard.SetTarget(animX, AnimatedPiece);
+        Storyboard.SetTargetProperty(animX, new PropertyPath(Canvas.LeftProperty));
+        Storyboard.SetTarget(animY, AnimatedPiece);
+        Storyboard.SetTargetProperty(animY, new PropertyPath(Canvas.TopProperty));
+
+        sb.Children.Add(animX);
+        sb.Children.Add(animY);
+
+        if (move.IsCastling)
+        {
+            SetupCastlingRookAnimation(vm, move, sb, duration, cubicEase, pieceSize);
+        }
+
+        bool isCapture = move.CapturedPiece != null || move.IsEnPassant;
+
+        sb.Completed += (_, _) =>
+        {
+            if (_animatingSquare != null)
+            {
+                _animatingSquare.IsBeingAnimated = false;
+                _animatingSquare = null;
+            }
+
+            if (_animatingRookSquare != null)
+            {
+                _animatingRookSquare.IsBeingAnimated = false;
+                _animatingRookSquare = null;
+            }
+
+            AnimatedPiece.Visibility = Visibility.Collapsed;
+            AnimatedPiece.Source = null;
+            AnimatedPiece2.Visibility = Visibility.Collapsed;
+            AnimatedPiece2.Source = null;
+            _activeMoveStoryboard = null;
+
+            if (isCapture)
+            {
+                PlayCaptureRipple(vm, move.To.File, move.To.Rank);
+            }
+        };
+
+        _activeMoveStoryboard = sb;
+        sb.Begin();
+    }
+
+    private void SetupCastlingRookAnimation(
+        ChessBoardViewModel vm,
+        MoveRecord move,
+        Storyboard sb,
+        TimeSpan duration,
+        IEasingFunction easing,
+        double pieceSize)
+    {
+        int rank = move.Color == PieceColor.White ? 0 : 7;
+        int rookFromFile, rookToFile;
+        if (move.To.File == 6) // Kingside
+        {
+            rookFromFile = 7;
+            rookToFile = 5;
+        }
+        else // Queenside
+        {
+            rookFromFile = 0;
+            rookToFile = 3;
+        }
+
+        var rookDestSq = FindSquare(vm, rookToFile, rank);
+        if (rookDestSq == null) return;
+
+        string rookKey = $"{(move.Color == PieceColor.White ? "White" : "Black")}RookDrawing";
+        var rookImg = ResolvePieceImage(rookKey);
+        if (rookImg == null) return;
+
+        Point rookFromCenter = GetSquareCenter(vm, rookFromFile, rank);
+        Point rookToCenter = GetSquareCenter(vm, rookToFile, rank);
+
+        double rx1 = rookFromCenter.X - pieceSize / 2.0;
+        double ry1 = rookFromCenter.Y - pieceSize / 2.0;
+        double rx2 = rookToCenter.X - pieceSize / 2.0;
+        double ry2 = rookToCenter.Y - pieceSize / 2.0;
+
+        AnimatedPiece2.Source = rookImg;
+        AnimatedPiece2.Width = pieceSize;
+        AnimatedPiece2.Height = pieceSize;
+        AnimatedPiece2.Visibility = Visibility.Visible;
+        Canvas.SetLeft(AnimatedPiece2, rx1);
+        Canvas.SetTop(AnimatedPiece2, ry1);
+
+        _animatingRookSquare = rookDestSq;
+        rookDestSq.IsBeingAnimated = true;
+
+        var rAnimX = new DoubleAnimation(rx1, rx2, duration) { EasingFunction = easing };
+        var rAnimY = new DoubleAnimation(ry1, ry2, duration) { EasingFunction = easing };
+
+        Storyboard.SetTarget(rAnimX, AnimatedPiece2);
+        Storyboard.SetTargetProperty(rAnimX, new PropertyPath(Canvas.LeftProperty));
+        Storyboard.SetTarget(rAnimY, AnimatedPiece2);
+        Storyboard.SetTargetProperty(rAnimY, new PropertyPath(Canvas.TopProperty));
+
+        sb.Children.Add(rAnimX);
+        sb.Children.Add(rAnimY);
+    }
+
+    private void AnimateCastlingRookOnly(ChessBoardViewModel vm, MoveRecord move)
+    {
+        var boardSize = GetBoardDisplaySize();
+        double sqWidth = boardSize.Width / 8.0;
+        double sqHeight = boardSize.Height / 8.0;
+        double pieceSize = Math.Max(32, Math.Min(sqWidth, sqHeight) * 0.90);
+
+        var sb = new Storyboard();
+        var duration = TimeSpan.FromMilliseconds(160);
+        var cubicEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        SetupCastlingRookAnimation(vm, move, sb, duration, cubicEase, pieceSize);
+
+        sb.Completed += (_, _) =>
+        {
+            if (_animatingRookSquare != null)
+            {
+                _animatingRookSquare.IsBeingAnimated = false;
+                _animatingRookSquare = null;
+            }
+
+            AnimatedPiece2.Visibility = Visibility.Collapsed;
+            AnimatedPiece2.Source = null;
+            _activeMoveStoryboard = null;
+        };
+
+        _activeMoveStoryboard = sb;
+        sb.Begin();
+    }
+
+    private void PlayCaptureRipple(ChessBoardViewModel vm, int file, int rank)
+    {
+        if (_activeRippleStoryboard != null)
+        {
+            try { _activeRippleStoryboard.Stop(); } catch { }
+            _activeRippleStoryboard = null;
+        }
+
+        var boardSize = GetBoardDisplaySize();
+        double sqSize = boardSize.Width / 8.0;
+        Point center = GetSquareCenter(vm, file, rank);
+
+        double startSize = sqSize * 0.65;
+        double endSize = sqSize * 1.30;
+
+        CaptureRippleRing.Width = startSize;
+        CaptureRippleRing.Height = startSize;
+        CaptureRippleRing.Opacity = 0.85;
+        CaptureRippleRing.Visibility = Visibility.Visible;
+        Canvas.SetLeft(CaptureRippleRing, center.X - startSize / 2.0);
+        Canvas.SetTop(CaptureRippleRing, center.Y - startSize / 2.0);
+
+        var sb = new Storyboard();
+        var duration = TimeSpan.FromMilliseconds(220);
+        var ease = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+
+        var widthAnim = new DoubleAnimation(startSize, endSize, duration) { EasingFunction = ease };
+        var heightAnim = new DoubleAnimation(startSize, endSize, duration) { EasingFunction = ease };
+        var leftAnim = new DoubleAnimation(center.X - startSize / 2.0, center.X - endSize / 2.0, duration) { EasingFunction = ease };
+        var topAnim = new DoubleAnimation(center.Y - startSize / 2.0, center.Y - endSize / 2.0, duration) { EasingFunction = ease };
+        var opacityAnim = new DoubleAnimation(0.85, 0.0, duration) { EasingFunction = ease };
+
+        Storyboard.SetTarget(widthAnim, CaptureRippleRing);
+        Storyboard.SetTargetProperty(widthAnim, new PropertyPath(FrameworkElement.WidthProperty));
+        Storyboard.SetTarget(heightAnim, CaptureRippleRing);
+        Storyboard.SetTargetProperty(heightAnim, new PropertyPath(FrameworkElement.HeightProperty));
+        Storyboard.SetTarget(leftAnim, CaptureRippleRing);
+        Storyboard.SetTargetProperty(leftAnim, new PropertyPath(Canvas.LeftProperty));
+        Storyboard.SetTarget(topAnim, CaptureRippleRing);
+        Storyboard.SetTargetProperty(topAnim, new PropertyPath(Canvas.TopProperty));
+        Storyboard.SetTarget(opacityAnim, CaptureRippleRing);
+        Storyboard.SetTargetProperty(opacityAnim, new PropertyPath(UIElement.OpacityProperty));
+
+        sb.Children.Add(widthAnim);
+        sb.Children.Add(heightAnim);
+        sb.Children.Add(leftAnim);
+        sb.Children.Add(topAnim);
+        sb.Children.Add(opacityAnim);
+
+        sb.Completed += (_, _) =>
+        {
+            CaptureRippleRing.Visibility = Visibility.Collapsed;
+            _activeRippleStoryboard = null;
+        };
+
+        _activeRippleStoryboard = sb;
+        sb.Begin();
     }
 
     private ImageSource? ResolvePieceImage(string? pieceKey)
@@ -131,16 +504,47 @@ public partial class ChessBoardControl : UserControl
         };
     }
 
-    private BoardSquareViewModel? GetSquareAtPoint(ChessBoardViewModel vm, Point pt)
+    private Size GetBoardDisplaySize()
     {
         double boardWidth = SquaresItemsControl.ActualWidth > 0 ? SquaresItemsControl.ActualWidth : (double.IsNaN(SquaresItemsControl.Width) ? 560.0 : SquaresItemsControl.Width);
         double boardHeight = SquaresItemsControl.ActualHeight > 0 ? SquaresItemsControl.ActualHeight : (double.IsNaN(SquaresItemsControl.Height) ? 560.0 : SquaresItemsControl.Height);
+        return new Size(boardWidth, boardHeight);
+    }
 
-        if (boardWidth <= 0 || boardHeight <= 0) return null;
-        if (pt.X < 0 || pt.X >= boardWidth || pt.Y < 0 || pt.Y >= boardHeight) return null;
+    private Point GetSquareCenter(ChessBoardViewModel vm, int file, int rank)
+    {
+        var boardSize = GetBoardDisplaySize();
+        double sqWidth = boardSize.Width / 8.0;
+        double sqHeight = boardSize.Height / 8.0;
 
-        double sqWidth = boardWidth / 8.0;
-        double sqHeight = boardHeight / 8.0;
+        int gridRow = vm.IsFlipped ? rank : (7 - rank);
+        int gridCol = vm.IsFlipped ? (7 - file) : file;
+
+        double centerX = gridCol * sqWidth + sqWidth / 2.0;
+        double centerY = gridRow * sqHeight + sqHeight / 2.0;
+        return new Point(centerX, centerY);
+    }
+
+    private BoardSquareViewModel? FindSquare(ChessBoardViewModel vm, int file, int rank)
+    {
+        int gridRow = vm.IsFlipped ? rank : (7 - rank);
+        int gridCol = vm.IsFlipped ? (7 - file) : file;
+        int idx = gridRow * 8 + gridCol;
+        if (idx >= 0 && idx < vm.Squares.Count)
+        {
+            return vm.Squares[idx];
+        }
+        return null;
+    }
+
+    private BoardSquareViewModel? GetSquareAtPoint(ChessBoardViewModel vm, Point pt)
+    {
+        var boardSize = GetBoardDisplaySize();
+        if (boardSize.Width <= 0 || boardSize.Height <= 0) return null;
+        if (pt.X < 0 || pt.X >= boardSize.Width || pt.Y < 0 || pt.Y >= boardSize.Height) return null;
+
+        double sqWidth = boardSize.Width / 8.0;
+        double sqHeight = boardSize.Height / 8.0;
 
         int col = (int)Math.Floor(pt.X / sqWidth);
         int row = (int)Math.Floor(pt.Y / sqHeight);
@@ -159,7 +563,7 @@ public partial class ChessBoardControl : UserControl
 
     private void Board_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        // Reset any stale drag state
+        StopCurrentAnimation();
         CleanupDrag(false, "NewMouseDown");
 
         if (DataContext is not ChessBoardViewModel vm || vm.IsInputDisabled || vm.IsGameOver)
@@ -176,10 +580,9 @@ public partial class ChessBoardControl : UserControl
             _sourceSquare = sq;
             _dragStartPoint = pt;
 
-            double boardWidth = SquaresItemsControl.ActualWidth > 0 ? SquaresItemsControl.ActualWidth : 560.0;
-            double boardHeight = SquaresItemsControl.ActualHeight > 0 ? SquaresItemsControl.ActualHeight : 560.0;
-            double sqWidth = boardWidth / 8.0;
-            double sqHeight = boardHeight / 8.0;
+            var boardSize = GetBoardDisplaySize();
+            double sqWidth = boardSize.Width / 8.0;
+            double sqHeight = boardSize.Height / 8.0;
 
             int col = (int)Math.Floor(pt.X / sqWidth);
             int row = (int)Math.Floor(pt.Y / sqHeight);
@@ -236,7 +639,8 @@ public partial class ChessBoardControl : UserControl
                 if (img != null)
                 {
                     GhostPiece.Source = img;
-                    double sqSize = (SquaresItemsControl.ActualWidth > 0 ? SquaresItemsControl.ActualWidth : 560.0) / 8.0;
+                    var boardSize = GetBoardDisplaySize();
+                    double sqSize = boardSize.Width / 8.0;
                     GhostPiece.Width = Math.Max(48, sqSize * 0.92);
                     GhostPiece.Height = Math.Max(48, sqSize * 0.92);
                     GhostPiece.Visibility = Visibility.Visible;
@@ -296,7 +700,7 @@ public partial class ChessBoardControl : UserControl
             {
                 if (targetSq != source)
                 {
-                    bool moved = vm.TryExecuteMove(source, targetSq);
+                    bool moved = vm.TryExecuteMove(source, targetSq, isUserDrag: true);
                     Debug.WriteLine($"[KnightLab DND] Move execution ({source.SquareName} -> {targetSq.SquareName}): moved={moved}");
 
                     if (!moved && targetSq.HasPiece && targetSq.IsWhitePiece == vm.Game.IsWhiteTurn)
@@ -367,7 +771,7 @@ public partial class ChessBoardControl : UserControl
     {
         if (_isReleasingCapture) return;
 
-        // CRITICAL FIX: Only clean up if BoardContainerGrid itself lost mouse capture.
+        // Only clean up if BoardContainerGrid itself lost mouse capture.
         // Because LostMouseCapture is a bubbling event, when a child Button loses capture
         // (which happens when BoardContainerGrid.CaptureMouse() is called upon dragging),
         // that event bubbles to BoardContainerGrid. We MUST NOT abort our drag for child elements!

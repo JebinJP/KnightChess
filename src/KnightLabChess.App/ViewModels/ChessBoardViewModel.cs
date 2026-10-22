@@ -29,8 +29,24 @@ public partial class BoardSquareViewModel : ObservableObject
     [ObservableProperty] private bool _hasRankLabel;
     [ObservableProperty] private bool _hasFileLabel;
     [ObservableProperty] private bool _isBeingDragged;
+    [ObservableProperty] private bool _isBeingAnimated;
 
     public string SquareName => $"{(char)('a' + File)}{Rank + 1}";
+}
+
+/// <summary>
+/// Event arguments providing move details and interaction origin for visual animations.
+/// </summary>
+public class MoveExecutedEventArgs : EventArgs
+{
+    public MoveRecord Move { get; }
+    public bool IsUserDrag { get; }
+
+    public MoveExecutedEventArgs(MoveRecord move, bool isUserDrag = false)
+    {
+        Move = move;
+        IsUserDrag = isUserDrag;
+    }
 }
 
 /// <summary>
@@ -78,11 +94,24 @@ public partial class ChessBoardViewModel : ObservableObject
     [ObservableProperty] private bool _isInputDisabled;
     [ObservableProperty] private bool _isAudioMuted;
     [ObservableProperty] private IReadOnlyList<string>? _allowedMoves;
+    [ObservableProperty] private bool _showMoveAnimations = true;
 
     /// <summary>
     /// Fired when a legal move is made (provides SAN notation).
     /// </summary>
     public event EventHandler<string>? MoveMade;
+
+    /// <summary>
+    /// Fired when a legal move is executed, providing structured move metadata and interaction origin.
+    /// Used by the presentation layer for smooth piece movement animations and capture effects.
+    /// </summary>
+    public event EventHandler<MoveExecutedEventArgs>? MoveExecuted;
+
+    /// <summary>
+    /// Fired when the visual board is fully reset, flipped, or undone.
+    /// Used to cancel any in-flight transitions safely.
+    /// </summary>
+    public event EventHandler? BoardRefreshed;
 
     /// <summary>
     /// Fired when the game ends.
@@ -153,6 +182,7 @@ public partial class ChessBoardViewModel : ObservableObject
         SelectedSquare = null;
         MoveHistory.Clear();
         UpdateBoardDisplay();
+        BoardRefreshed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -167,6 +197,7 @@ public partial class ChessBoardViewModel : ObservableObject
     partial void OnIsFlippedChanged(bool value)
     {
         UpdateBoardDisplay();
+        BoardRefreshed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -182,6 +213,7 @@ public partial class ChessBoardViewModel : ObservableObject
         {
             SelectedSquare = null;
             UpdateBoardDisplay();
+            BoardRefreshed?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -268,7 +300,7 @@ public partial class ChessBoardViewModel : ObservableObject
         }
 
         // Attempting to move from SelectedSquare to clicked square
-        TryExecuteMove(SelectedSquare, square);
+        TryExecuteMove(SelectedSquare, square, isUserDrag: false);
     }
 
     /// <summary>
@@ -277,7 +309,7 @@ public partial class ChessBoardViewModel : ObservableObject
     /// Used by both click-to-move and drag-and-drop.
     /// Returns true if the move was successfully made; false otherwise.
     /// </summary>
-    public bool TryExecuteMove(BoardSquareViewModel? fromSquare, BoardSquareViewModel? toSquare)
+    public bool TryExecuteMove(BoardSquareViewModel? fromSquare, BoardSquareViewModel? toSquare, bool isUserDrag = false)
     {
         if (fromSquare is null || toSquare is null) return false;
         if (_isHandlingMove || IsInputDisabled || IsGameOver) return false;
@@ -335,6 +367,7 @@ public partial class ChessBoardViewModel : ObservableObject
                         UpdateBoardDisplay();
                         PlayAudioForMove(moveResult);
                         MoveMade?.Invoke(this, moveResult.Move!.San);
+                        MoveExecuted?.Invoke(this, new MoveExecutedEventArgs(moveResult.Move!, isUserDrag));
                         return true;
                     }
                 }
@@ -356,6 +389,7 @@ public partial class ChessBoardViewModel : ObservableObject
                     UpdateBoardDisplay();
                     PlayAudioForMove(moveResult);
                     MoveMade?.Invoke(this, moveResult.Move!.San);
+                    MoveExecuted?.Invoke(this, new MoveExecutedEventArgs(moveResult.Move!, isUserDrag));
                     return true;
                 }
             }
@@ -409,6 +443,10 @@ public partial class ChessBoardViewModel : ObservableObject
             UpdateBoardDisplay();
             PlayAudioForMove(moveResult);
             MoveMade?.Invoke(this, moveResult.Move?.San ?? moveText);
+            if (moveResult.Move != null)
+            {
+                MoveExecuted?.Invoke(this, new MoveExecutedEventArgs(moveResult.Move, isUserDrag: false));
+            }
             return true;
         }
 
@@ -464,6 +502,7 @@ public partial class ChessBoardViewModel : ObservableObject
         _game.LoadFromPosition(fen, []);
         SelectedSquare = null;
         UpdateBoardDisplay();
+        BoardRefreshed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -474,6 +513,7 @@ public partial class ChessBoardViewModel : ObservableObject
         _game.LoadFromPosition(startFen, moves);
         SelectedSquare = null;
         UpdateBoardDisplay();
+        BoardRefreshed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

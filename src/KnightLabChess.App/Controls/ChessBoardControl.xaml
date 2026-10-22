@@ -153,6 +153,9 @@
                                                         <DataTrigger Binding="{Binding IsBeingDragged}" Value="True">
                                                             <Setter Property="Opacity" Value="0.2" />
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsBeingAnimated}" Value="True">
+                                                            <Setter Property="Opacity" Value="0.0" />
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Image.Style>
@@ -171,16 +174,48 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- Drag Adorner / Floating Piece Overlay Canvas -->
-            <Canvas x:Name="DragCanvas"
+            <!-- Overlay Canvas for Dragging, Smooth Piece Movement, and Capture Polish -->
+            <Canvas x:Name="OverlayCanvas"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     IsHitTestVisible="False"
                     ClipToBounds="False">
+                <!-- Subtle Capture Ripple Ring -->
+                <Border x:Name="CaptureRippleRing"
+                        BorderBrush="{StaticResource AccentBrush}"
+                        BorderThickness="3"
+                        CornerRadius="999"
+                        Visibility="Collapsed"
+                        IsHitTestVisible="False" />
+
+                <!-- Primary Moving Animated Piece -->
+                <Image x:Name="AnimatedPiece"
+                       Stretch="Uniform"
+                       Visibility="Collapsed"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       IsHitTestVisible="False">
+                    <Image.Effect>
+                        <DropShadowEffect BlurRadius="16" Direction="270" ShadowDepth="4" Color="#000000" Opacity="0.5" />
+                    </Image.Effect>
+                </Image>
+
+                <!-- Secondary Castling Rook Animated Piece -->
+                <Image x:Name="AnimatedPiece2"
+                       Stretch="Uniform"
+                       Visibility="Collapsed"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       IsHitTestVisible="False">
+                    <Image.Effect>
+                        <DropShadowEffect BlurRadius="16" Direction="270" ShadowDepth="4" Color="#000000" Opacity="0.5" />
+                    </Image.Effect>
+                </Image>
+
+                <!-- Drag Adorner / Floating Piece Overlay -->
                 <Image x:Name="GhostPiece"
                        Stretch="Uniform"
                        Visibility="Collapsed"
-                       RenderOptions.BitmapScalingMode="HighQuality">
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       IsHitTestVisible="False">
                     <Image.Effect>
                         <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="6" Color="#000000" Opacity="0.6" />
                     </Image.Effect>
