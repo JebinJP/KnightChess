@@ -40,6 +40,12 @@ public class ChessAudioService : IAudioService, IDisposable
         }
     }
 
+    public void UpdateSettings(bool isEnabled, int volume)
+    {
+        _isSoundEnabled = isEnabled;
+        Volume = volume;
+    }
+
     public ChessAudioService(string contentDirectory, ILogger<ChessAudioService> logger)
     {
         _contentDirectory = contentDirectory;

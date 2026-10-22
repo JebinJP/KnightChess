@@ -217,6 +217,113 @@
                                       FontSize="12" />
                         </StackPanel>
                     </Border>
+
+                    <!-- Gemini AI Chess Coach Card -->
+                    <Border Background="{StaticResource SurfaceGlassBrush}"
+                            BorderBrush="{StaticResource GlassBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="20"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,14">
+                                <TextBlock Text="Gemini AI Chess Coach"
+                                           Style="{StaticResource H2TextStyle}"
+                                           FontSize="16"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           DockPanel.Dock="Left" />
+
+                                <Border Background="#161A20"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8,3"
+                                        DockPanel.Dock="Right"
+                                        HorizontalAlignment="Right">
+                                    <TextBlock Text="AI Grounded"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentLightBrush}" />
+                                </Border>
+                            </DockPanel>
+
+                            <CheckBox IsChecked="{Binding EnableAiCoach}"
+                                      Content="Enable Gemini AI Coaching during match play and analysis"
+                                      Foreground="{StaticResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,12" />
+
+                            <TextBlock Text="Gemini API Key:"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Margin="0,0,0,4" />
+
+                            <TextBox Text="{Binding GeminiApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource DarkTextBoxStyle}"
+                                     FontSize="11"
+                                     Margin="0,0,0,6" />
+
+                            <TextBlock Text="Leave blank to use the pure offline rule-based engine coach or GEMINI_API_KEY environment variable."
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,0,12" />
+
+                            <!-- Model Selection -->
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="AI Model:"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"
+                                           DockPanel.Dock="Left" />
+                                <ComboBox ItemsSource="{Binding CoachModelOptions}"
+                                          SelectedItem="{Binding GeminiModel}"
+                                          Width="180"
+                                          HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <!-- Persona Selection -->
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="Coach Persona:"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"
+                                           DockPanel.Dock="Left" />
+                                <ComboBox ItemsSource="{Binding CoachPersonaOptions}"
+                                          SelectedItem="{Binding CoachPersona}"
+                                          Width="180"
+                                          HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <!-- Skill Level -->
+                            <DockPanel Margin="0,0,0,14">
+                                <TextBlock Text="Target Skill Level:"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"
+                                           DockPanel.Dock="Left" />
+                                <ComboBox ItemsSource="{Binding CoachSkillLevelOptions}"
+                                          SelectedItem="{Binding CoachSkillLevel}"
+                                          Width="180"
+                                          HorizontalAlignment="Right" />
+                            </DockPanel>
+
+                            <DockPanel Margin="0,4,0,0">
+                                <Button Content="Test Coach"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding TestCoachCommand}"
+                                        Padding="12,5"
+                                        FontSize="11"
+                                        DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding CoachStatusText}"
+                                           FontSize="11"
+                                           Foreground="{StaticResource AccentLightBrush}"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,0,0"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Right Column: Board Visuals, Audio & Storage -->
@@ -308,6 +415,14 @@
                                     Maximum="100"
                                     TickFrequency="5"
                                     IsSnapToTickEnabled="True" />
+
+                            <Button Content="🔊 Test Sound Effect"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding TestAudioCommand}"
+                                    Padding="12,5"
+                                    FontSize="11"
+                                    Margin="0,8,0,0"
+                                    HorizontalAlignment="Left" />
                         </StackPanel>
                     </Border>
 

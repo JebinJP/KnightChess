@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Lessons;
 using KnightLabChess.Core.Progress;
 
@@ -59,13 +60,16 @@ public partial class LearnViewModel : PageViewModelBase
     private int _correctAnswers;
     private int _totalAttempts;
 
+    private readonly IAudioService? _audioService;
+
     public LessonStage[] Stages { get; } = Enum.GetValues<LessonStage>();
 
-    public LearnViewModel(ILessonService lessonService, IProgressService progressService)
+    public LearnViewModel(ILessonService lessonService, IProgressService progressService, IAudioService? audioService = null)
     {
         _lessonService = lessonService;
         _progressService = progressService;
-        _lessonBoard = new ChessBoardViewModel();
+        _audioService = audioService;
+        _lessonBoard = new ChessBoardViewModel(audioService);
         PageTitle = "Learn";
         PageIcon = "📖";
     }

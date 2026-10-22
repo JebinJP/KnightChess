@@ -1,6 +1,8 @@
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
+using KnightLabChess.Core.Coach;
 using KnightLabChess.Core.Engine;
 using KnightLabChess.Core.Settings;
 using Microsoft.Win32;
@@ -8,12 +10,14 @@ using Microsoft.Win32;
 namespace KnightLabChess.App.ViewModels;
 
 /// <summary>
-/// ViewModel for application preferences, Stockfish engine configuration, and visual settings.
+/// ViewModel for application preferences, Stockfish engine configuration, Gemini AI Coach, and visual settings.
 /// </summary>
 public partial class SettingsViewModel : PageViewModelBase
 {
     private readonly ISettingsService _settingsService;
     private readonly IEngineService _engineService;
+    private readonly IAudioService? _audioService;
+    private readonly IAiCoachService? _coachService;
 
     // Engine
     [ObservableProperty] private string _stockfishPath = string.Empty;
@@ -23,6 +27,14 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty] private int _engineThreads = 2;
     [ObservableProperty] private int _engineHashMb = 128;
     [ObservableProperty] private bool _useFallbackIfNotFound = true;
+
+    // AI Chess Coach (Gemini)
+    [ObservableProperty] private string _geminiApiKey = string.Empty;
+    [ObservableProperty] private string _geminiModel = "gemini-2.5-flash";
+    [ObservableProperty] private bool _enableAiCoach = true;
+    [ObservableProperty] private string _coachPersona = "Encouraging Grandmaster";
+    [ObservableProperty] private string _coachSkillLevel = "Intermediate";
+    [ObservableProperty] private string _coachStatusText = "Ready";
 
     // Visuals & Board
     [ObservableProperty] private string _selectedBoardTheme = "Emerald";
@@ -37,15 +49,24 @@ public partial class SettingsViewModel : PageViewModelBase
 
     // System
     [ObservableProperty] private string _databasePath = string.Empty;
-    [ObservableProperty] private string _appVersion = "1.0.0";
+    [ObservableProperty] private string _appVersion = "2.0.0";
     [ObservableProperty] private string? _feedbackMessage;
 
     public string[] BoardThemeOptions { get; } = ["Emerald", "Classic Wood", "Midnight", "Ocean"];
+    public string[] CoachModelOptions { get; } = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"];
+    public string[] CoachPersonaOptions { get; } = ["Encouraging Grandmaster", "Strict Tournament Director", "Tactical Speed Coach"];
+    public string[] CoachSkillLevelOptions { get; } = ["Beginner", "Intermediate", "Advanced"];
 
-    public SettingsViewModel(ISettingsService settingsService, IEngineService engineService)
+    public SettingsViewModel(
+        ISettingsService settingsService,
+        IEngineService engineService,
+        IAudioService? audioService = null,
+        IAiCoachService? coachService = null)
     {
         _settingsService = settingsService;
         _engineService = engineService;
+        _audioService = audioService;
+        _coachService = coachService;
 
         PageTitle = "Settings";
         PageIcon = "⚙";
@@ -68,11 +89,22 @@ public partial class SettingsViewModel : PageViewModelBase
             EngineHashMb = s.EngineHashMb;
             UseFallbackIfNotFound = s.UseBuiltinFallbackIfNotFound;
 
+            GeminiApiKey = s.GeminiApiKey;
+            GeminiModel = s.GeminiModel;
+            EnableAiCoach = s.EnableAiCoach;
+            CoachPersona = s.CoachPersona;
+            CoachSkillLevel = s.CoachSkillLevel;
+            CoachStatusText = !string.IsNullOrWhiteSpace(GeminiApiKey)
+                ? "✓ Gemini AI Coach configured & active"
+                : "Pure Offline Heuristic Coach active (Enter API Key for Gemini)";
+
             SelectedBoardTheme = s.BoardTheme;
             HighlightLegalMoves = s.HighlightLegalMoves;
             ShowMoveAnimations = s.ShowMoveAnimations;
             SoundEnabled = s.SoundEnabled;
             SoundVolume = s.SoundVolume;
+
+            _audioService?.UpdateSettings(SoundEnabled, SoundVolume);
 
             AutoQueenPromotion = s.AutoQueenPromotion;
             ShowEngineEvalDuringPlay = s.ShowEngineEvalDuringPlay;
@@ -136,6 +168,50 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    public void TestAudio()
+    {
+        _audioService?.UpdateSettings(SoundEnabled, SoundVolume);
+        _audioService?.Play(ChessSound.Move);
+    }
+
+    [RelayCommand]
+    public async Task TestCoachAsync()
+    {
+        CoachStatusText = "Testing coach service...";
+        try
+        {
+            if (_coachService is null)
+            {
+                CoachStatusText = "AI Coach service unavailable.";
+                return;
+            }
+
+            var sampleReq = new CoachAnalysisRequest(
+                FenBefore: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+                FenAfter: "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
+                MoveSan: "e5",
+                MoveUci: "e7e5",
+                BestMoveSan: "e5",
+                BestMoveUci: "e7e5",
+                ScoreBeforeCp: 20,
+                ScoreAfterCp: 15,
+                MateIn: null,
+                PrincipalVariationSan: ["Nf3", "Nc6", "Bb5"],
+                Classification: CoachMoveClassification.BestMove,
+                SkillLevel: CoachSkillLevel);
+
+            var res = await _coachService.AnalyzeMoveAsync(sampleReq);
+            CoachStatusText = res.Success
+                ? $"✓ Coach Ready: {res.Summary}"
+                : $"Coach Warning: {res.ErrorMessage ?? "Fallback active"}";
+        }
+        catch (Exception ex)
+        {
+            CoachStatusText = $"Coach test error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     public async Task SaveSettingsAsync()
     {
         try
@@ -148,6 +224,12 @@ public partial class SettingsViewModel : PageViewModelBase
                 EngineHashMb = EngineHashMb,
                 UseBuiltinFallbackIfNotFound = UseFallbackIfNotFound,
 
+                GeminiApiKey = GeminiApiKey,
+                GeminiModel = GeminiModel,
+                EnableAiCoach = EnableAiCoach,
+                CoachPersona = CoachPersona,
+                CoachSkillLevel = CoachSkillLevel,
+
                 BoardTheme = SelectedBoardTheme,
                 HighlightLegalMoves = HighlightLegalMoves,
                 ShowMoveAnimations = ShowMoveAnimations,
@@ -159,6 +241,7 @@ public partial class SettingsViewModel : PageViewModelBase
             };
 
             await _settingsService.SaveSettingsAsync(settings);
+            _audioService?.UpdateSettings(SoundEnabled, SoundVolume);
 
             if (!string.IsNullOrWhiteSpace(StockfishPath) && File.Exists(StockfishPath))
             {
@@ -201,6 +284,12 @@ public partial class SettingsViewModel : PageViewModelBase
             EngineHashMb = defaults.EngineHashMb;
             UseFallbackIfNotFound = defaults.UseBuiltinFallbackIfNotFound;
 
+            GeminiApiKey = defaults.GeminiApiKey;
+            GeminiModel = defaults.GeminiModel;
+            EnableAiCoach = defaults.EnableAiCoach;
+            CoachPersona = defaults.CoachPersona;
+            CoachSkillLevel = defaults.CoachSkillLevel;
+
             SelectedBoardTheme = defaults.BoardTheme;
             HighlightLegalMoves = defaults.HighlightLegalMoves;
             ShowMoveAnimations = defaults.ShowMoveAnimations;
@@ -211,6 +300,8 @@ public partial class SettingsViewModel : PageViewModelBase
             ShowEngineEvalDuringPlay = defaults.ShowEngineEvalDuringPlay;
 
             await _settingsService.SaveSettingsAsync(defaults);
+            _audioService?.UpdateSettings(SoundEnabled, SoundVolume);
+
             FeedbackMessage = "Settings restored to defaults.";
 
             await Task.Delay(3000);

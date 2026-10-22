@@ -140,12 +140,27 @@ public class UciStockfishEngine : IEngineService
             }
 
             // Fallback engine move calculation
-            return CalculateFallbackMove(fen, difficulty);
+            if (cancellationToken.IsCancellationRequested) return null;
+            return CalculateFallbackMove(fen, difficulty, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (IsEngineAvailable && _input != null)
+                {
+                    await _input.WriteLineAsync("stop");
+                    await _input.FlushAsync(CancellationToken.None);
+                }
+            }
+            catch { /* ignore */ }
+            return null;
         }
         catch (Exception ex)
         {
+            if (cancellationToken.IsCancellationRequested) return null;
             _logger.LogWarning(ex, "Error getting best move from engine. Using fallback.");
-            return CalculateFallbackMove(fen, difficulty);
+            return CalculateFallbackMove(fen, difficulty, cancellationToken);
         }
         finally
         {
@@ -245,65 +260,48 @@ public class UciStockfishEngine : IEngineService
 
     /// <summary>
     /// Tactical heuristic move picker used when Stockfish binary is not present on disk.
-    /// Evaluates piece values, checks, captures, and center control.
+    /// Evaluates piece values, piece-square tables, king safety, checks, and captures.
     /// </summary>
-    private string? CalculateFallbackMove(string fen, EngineDifficulty difficulty)
+    private string? CalculateFallbackMove(string fen, EngineDifficulty difficulty, CancellationToken cancellationToken = default)
     {
         try
         {
+            if (cancellationToken.IsCancellationRequested) return null;
+
             var game = new GeraChessGameAdapter(fen);
-
-            var legalMoves = new List<string>();
-            for (int file = 0; file < 8; file++)
-            {
-                for (int rank = 0; rank < 8; rank++)
-                {
-                    var from = new BoardSquare(file, rank);
-                    var piece = game.GetPieceAt(from);
-                    if (piece != null && piece.Color == game.ActiveTurn)
-                    {
-                        var destinations = game.GetLegalDestinations(from);
-                        foreach (var to in destinations)
-                        {
-                            var uci = $"{from.AlgebraicNotation}{to.AlgebraicNotation}";
-                            if (piece.Type == PieceType.Pawn && (to.Rank == 7 || to.Rank == 0))
-                            {
-                                legalMoves.Add(uci + "q");
-                            }
-                            else
-                            {
-                                legalMoves.Add(uci);
-                            }
-                        }
-                    }
-                }
-            }
-
+            var legalMoves = GenerateAllLegalMovesUci(game);
             if (legalMoves.Count == 0) return null;
+
+            int searchDepth = difficulty switch
+            {
+                EngineDifficulty.Beginner => 1,
+                EngineDifficulty.Casual => 2,
+                EngineDifficulty.Intermediate => 2,
+                _ => 2
+            };
 
             var scoredMoves = new List<(string Uci, int Score)>();
             foreach (var uci in legalMoves)
             {
-                int score = 0;
-                var toSq = BoardSquare.FromAlgebraic(uci.Substring(2, 2));
-                var capturedPiece = game.GetPieceAt(toSq);
-                if (capturedPiece != null)
-                {
-                    score += capturedPiece.MaterialValue * 100;
-                }
+                if (cancellationToken.IsCancellationRequested) return null;
 
-                if (uci.Contains("e4") || uci.Contains("d4") || uci.Contains("e5") || uci.Contains("d5"))
-                    score += 40;
+                var res = game.MakeMove(uci);
+                if (!res.Success) continue;
+
+                int score = -SearchAlphaBeta(game, searchDepth - 1, -100000, 100000, cancellationToken);
+                game.UndoLastMove();
 
                 scoredMoves.Add((uci, score));
             }
+
+            if (scoredMoves.Count == 0) return legalMoves[0];
 
             scoredMoves.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             return difficulty switch
             {
-                EngineDifficulty.Beginner => _random.Next(3) == 0 ? scoredMoves[0].Uci : scoredMoves[_random.Next(scoredMoves.Count)].Uci,
-                EngineDifficulty.Casual => scoredMoves[_random.Next(Math.Min(3, scoredMoves.Count))].Uci,
+                EngineDifficulty.Beginner => scoredMoves[_random.Next(Math.Min(4, scoredMoves.Count))].Uci,
+                EngineDifficulty.Casual => scoredMoves[_random.Next(Math.Min(2, scoredMoves.Count))].Uci,
                 _ => scoredMoves[0].Uci
             };
         }
@@ -312,6 +310,131 @@ public class UciStockfishEngine : IEngineService
             _logger.LogWarning(ex, "Fallback move generation encountered an issue.");
             return null;
         }
+    }
+
+    private static int SearchAlphaBeta(IChessGame game, int depth, int alpha, int beta, CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken.IsCancellationRequested) return 0;
+
+        if (game.IsGameOver)
+        {
+            if (game.Result == GameResult.Draw) return 0;
+            return -20000 - depth;
+        }
+
+        if (depth <= 0)
+        {
+            return EvaluateStaticPosition(game);
+        }
+
+        var moves = GenerateAllLegalMovesUci(game);
+        if (moves.Count == 0) return 0;
+
+        int bestScore = -100000;
+        foreach (var uci in moves)
+        {
+            if (cancellationToken.IsCancellationRequested) break;
+
+            var res = game.MakeMove(uci);
+            if (!res.Success) continue;
+
+            int score = -SearchAlphaBeta(game, depth - 1, -beta, -alpha, cancellationToken);
+            game.UndoLastMove();
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+            }
+            if (score > alpha)
+            {
+                alpha = score;
+            }
+            if (alpha >= beta)
+            {
+                break;
+            }
+        }
+        return bestScore;
+    }
+
+    private static int EvaluateStaticPosition(IChessGame game)
+    {
+        int score = 0;
+        var turn = game.ActiveTurn;
+
+        for (int file = 0; file < 8; file++)
+        {
+            for (int rank = 0; rank < 8; rank++)
+            {
+                var piece = game.GetPieceAt(file, rank);
+                if (piece is null) continue;
+
+                int material = piece.Type switch
+                {
+                    PieceType.Pawn => 100,
+                    PieceType.Knight => 320,
+                    PieceType.Bishop => 330,
+                    PieceType.Rook => 500,
+                    PieceType.Queen => 900,
+                    PieceType.King => 20000,
+                    _ => 0
+                };
+
+                // Center control bonus
+                int centerBonus = 0;
+                if ((file == 3 || file == 4) && (rank == 3 || rank == 4))
+                    centerBonus = 30;
+                else if (file >= 2 && file <= 5 && rank >= 2 && rank <= 5)
+                    centerBonus = 15;
+
+                // Development bonus for minor pieces off 1st/8th rank
+                int devBonus = 0;
+                if ((piece.Type == PieceType.Knight || piece.Type == PieceType.Bishop) &&
+                    ((piece.Color == PieceColor.White && rank > 0) || (piece.Color == PieceColor.Black && rank < 7)))
+                {
+                    devBonus = 25;
+                }
+
+                int totalPieceVal = material + centerBonus + devBonus;
+                if (piece.Color == turn)
+                    score += totalPieceVal;
+                else
+                    score -= totalPieceVal;
+            }
+        }
+
+        if (game.IsInCheck) score -= 40;
+        return score;
+    }
+
+    private static List<string> GenerateAllLegalMovesUci(IChessGame game)
+    {
+        var moves = new List<string>();
+        for (int file = 0; file < 8; file++)
+        {
+            for (int rank = 0; rank < 8; rank++)
+            {
+                var from = new BoardSquare(file, rank);
+                var piece = game.GetPieceAt(from);
+                if (piece != null && piece.Color == game.ActiveTurn)
+                {
+                    var destinations = game.GetLegalDestinations(from);
+                    foreach (var to in destinations)
+                    {
+                        var uci = $"{from.AlgebraicNotation}{to.AlgebraicNotation}";
+                        if (piece.Type == PieceType.Pawn && (to.Rank == 7 || to.Rank == 0))
+                        {
+                            moves.Add(uci + "q");
+                        }
+                        else
+                        {
+                            moves.Add(uci);
+                        }
+                    }
+                }
+            }
+        }
+        return moves;
     }
 
     private static EngineEvaluation EvaluateFallback(string fen)
@@ -325,28 +448,33 @@ public class UciStockfishEngine : IEngineService
             return eval;
         }
 
-        int whiteMaterial = 0;
-        int blackMaterial = 0;
+        int score = EvaluateStaticPosition(game);
+        eval.ScoreCentipawns = score;
+        eval.Depth = 3;
 
-        for (int file = 0; file < 8; file++)
+        var legalMoves = GenerateAllLegalMovesUci(game);
+        if (legalMoves.Count > 0)
         {
-            for (int rank = 0; rank < 8; rank++)
+            int best = -100000;
+            string bestMove = legalMoves[0];
+            foreach (var m in legalMoves)
             {
-                var piece = game.GetPieceAt(file, rank);
-                if (piece is null) continue;
-
-                int val = piece.MaterialValue * 100;
-                if (piece.Color == PieceColor.White) whiteMaterial += val;
-                else blackMaterial += val;
+                var res = game.MakeMove(m);
+                if (res.Success)
+                {
+                    int s = -EvaluateStaticPosition(game);
+                    game.UndoLastMove();
+                    if (s > best)
+                    {
+                        best = s;
+                        bestMove = m;
+                    }
+                }
             }
+            eval.BestMoveUci = bestMove;
+            eval.PrincipalVariation = [bestMove];
         }
 
-        int cp = game.ActiveTurn == PieceColor.White
-            ? whiteMaterial - blackMaterial
-            : blackMaterial - whiteMaterial;
-
-        eval.ScoreCentipawns = cp;
-        eval.Depth = 1;
         return eval;
     }
 

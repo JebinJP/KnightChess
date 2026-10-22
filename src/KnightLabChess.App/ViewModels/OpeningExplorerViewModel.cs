@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Openings;
 
 namespace KnightLabChess.App.ViewModels;
@@ -12,6 +13,7 @@ namespace KnightLabChess.App.ViewModels;
 public partial class OpeningExplorerViewModel : PageViewModelBase
 {
     private readonly IOpeningService _openingService;
+    private readonly IAudioService? _audioService;
 
     [ObservableProperty]
     private ChessBoardViewModel _board;
@@ -38,10 +40,11 @@ public partial class OpeningExplorerViewModel : PageViewModelBase
 
     public string[] ColorFilterOptions { get; } = ["All", "White", "Black"];
 
-    public OpeningExplorerViewModel(IOpeningService openingService)
+    public OpeningExplorerViewModel(IOpeningService openingService, IAudioService? audioService = null)
     {
         _openingService = openingService;
-        _board = new ChessBoardViewModel();
+        _audioService = audioService;
+        _board = new ChessBoardViewModel(audioService);
 
         PageTitle = "Opening Explorer";
         PageIcon = "📚";

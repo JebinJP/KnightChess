@@ -238,4 +238,108 @@ public class BoardLayoutAndOrientationTests
         playVm.StartNewGameCommand.Execute(null);
         Assert.True(playVm.Board.IsFlipped);
     }
+
+    [Fact]
+    public void TryExecuteMove_ValidMove_ExecutesSuccessfullyAndUpdatesBoard()
+    {
+        // Arrange
+        var boardVm = new ChessBoardViewModel();
+        // e2 is index 52, e4 is index 36 in standard White perspective
+        var e2 = boardVm.Squares[52];
+        var e4 = boardVm.Squares[36];
+
+        // Act
+        bool result = boardVm.TryExecuteMove(e2, e4);
+
+        // Assert
+        Assert.True(result);
+        Assert.False(e2.HasPiece);
+        Assert.True(e4.HasPiece);
+        Assert.Equal("WhitePawnDrawing", e4.PieceKey);
+        Assert.False(boardVm.IsWhiteTurn);
+    }
+
+    [Fact]
+    public void TryExecuteMove_IllegalMove_ReturnsFalseAndPreservesBoard()
+    {
+        // Arrange
+        var boardVm = new ChessBoardViewModel();
+        var e2 = boardVm.Squares[52];
+        var e5 = boardVm.Squares[28]; // e5 is illegal for 1-ply pawn on e2
+
+        // Act
+        bool result = boardVm.TryExecuteMove(e2, e5);
+
+        // Assert
+        Assert.False(result);
+        Assert.True(e2.HasPiece);
+        Assert.False(e5.HasPiece);
+        Assert.True(boardVm.IsWhiteTurn);
+    }
+
+    [Fact]
+    public void TryExecuteMove_CastlingShortcut_KingOntoFriendlyRook_ExecutesCastling()
+    {
+        // Arrange: Position with White King on e1 and Rook on h1, clear squares f1 and g1
+        const string fen = "r3k2r/8/8/8/8/8/8/4K2R w KQkq - 0 1";
+        var boardVm = new ChessBoardViewModel();
+        boardVm.LoadFen(fen);
+
+        // Find e1 King square and h1 Rook square
+        var e1King = boardVm.Squares.First(s => s.File == 4 && s.Rank == 0);
+        var h1Rook = boardVm.Squares.First(s => s.File == 7 && s.Rank == 0);
+        var g1Square = boardVm.Squares.First(s => s.File == 6 && s.Rank == 0);
+        var f1Square = boardVm.Squares.First(s => s.File == 5 && s.Rank == 0);
+
+        Assert.Equal("WhiteKingDrawing", e1King.PieceKey);
+        Assert.Equal("WhiteRookDrawing", h1Rook.PieceKey);
+
+        // Act: User drags King directly onto the friendly Rook
+        bool result = boardVm.TryExecuteMove(e1King, h1Rook);
+
+        // Assert: Castling was recognized and executed!
+        Assert.True(result);
+        Assert.False(e1King.HasPiece);
+        Assert.False(h1Rook.HasPiece);
+        Assert.True(g1Square.HasPiece);
+        Assert.Equal("WhiteKingDrawing", g1Square.PieceKey);
+        Assert.True(f1Square.HasPiece);
+        Assert.Equal("WhiteRookDrawing", f1Square.PieceKey);
+        Assert.Equal("O-O", boardVm.MoveHistory[^1].WhiteSan);
+    }
+
+    [Fact]
+    public void TryExecuteMove_PawnPromotion_PromotesUsingPromotionPrompt()
+    {
+        // Arrange: White pawn on e7, ready to advance to e8
+        const string fen = "7k/4P3/8/8/8/8/8/7K w - - 0 1";
+        var boardVm = new ChessBoardViewModel();
+        boardVm.LoadFen(fen);
+        boardVm.PromptPromotion = _ => PieceType.Knight; // Promote to Knight
+
+        var e7Pawn = boardVm.Squares.First(s => s.File == 4 && s.Rank == 6);
+        var e8Square = boardVm.Squares.First(s => s.File == 4 && s.Rank == 7);
+
+        // Act
+        bool result = boardVm.TryExecuteMove(e7Pawn, e8Square);
+
+        // Assert
+        Assert.True(result);
+        Assert.False(e7Pawn.HasPiece);
+        Assert.True(e8Square.HasPiece);
+        Assert.Equal("WhiteKnightDrawing", e8Square.PieceKey);
+    }
+
+    [Fact]
+    public void BoardSquareViewModel_IsBeingDragged_TogglesCleanly()
+    {
+        var sq = new BoardSquareViewModel();
+        Assert.False(sq.IsBeingDragged);
+
+        sq.IsBeingDragged = true;
+        Assert.True(sq.IsBeingDragged);
+
+        sq.IsBeingDragged = false;
+        Assert.False(sq.IsBeingDragged);
+    }
 }

@@ -148,4 +148,31 @@ public class SpecialMovesTests
         Assert.Equal(promoPiece, pieceOnE8.Type);
         Assert.Equal(PieceColor.White, pieceOnE8.Color);
     }
+
+    [Fact]
+    public void Resign_WhenWhiteResigns_BlackWins()
+    {
+        var game = new GeraChessGameAdapter();
+        bool resigned = game.Resign(PieceColor.White);
+
+        Assert.True(resigned);
+        Assert.True(game.IsGameOver);
+        Assert.Equal(GameResult.BlackWins, game.Result);
+        Assert.Equal(GameEndReason.Resignation, game.EndReason);
+    }
+
+    [Fact]
+    public void Resign_WhenBlackResignsOnWhiteTurn_WhiteWins()
+    {
+        var game = new GeraChessGameAdapter(); // White's turn
+        Assert.True(game.IsWhiteTurn);
+
+        // Black explicitly resigns while it is White's turn (e.g. human playing black in computer mode)
+        bool resigned = game.Resign(PieceColor.Black);
+
+        Assert.True(resigned);
+        Assert.True(game.IsGameOver);
+        Assert.Equal(GameResult.WhiteWins, game.Result);
+        Assert.Equal(GameEndReason.Resignation, game.EndReason);
+    }
 }

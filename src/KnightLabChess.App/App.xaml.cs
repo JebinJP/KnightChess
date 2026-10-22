@@ -2,12 +2,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using KnightLabChess.App.ViewModels;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Chess;
+using KnightLabChess.Core.Coach;
 using KnightLabChess.Core.Engine;
 using KnightLabChess.Core.Lessons;
 using KnightLabChess.Core.Persistence;
 using KnightLabChess.Core.Progress;
 using KnightLabChess.Core.Puzzles;
+using KnightLabChess.Infrastructure.Audio;
+using KnightLabChess.Infrastructure.Coach;
 using KnightLabChess.Infrastructure.Content;
 using KnightLabChess.Infrastructure.Engine;
 using KnightLabChess.Infrastructure.Persistence;
@@ -94,9 +98,19 @@ public partial class App : Application
 #endif
         });
 
-        // Core domain
+        // Core domain & Engine
         services.AddTransient<IChessGame, GeraChessGameAdapter>();
         services.AddSingleton<IEngineService, UciStockfishEngine>();
+
+        // Audio Service
+        services.AddSingleton<IAudioService>(sp =>
+        {
+            var contentDir = AppDomain.CurrentDomain.BaseDirectory;
+            return new ChessAudioService(contentDir, sp.GetRequiredService<ILogger<ChessAudioService>>());
+        });
+
+        // AI Chess Coach
+        services.AddSingleton<IAiCoachService, GeminiCoachService>();
 
         // Infrastructure Persistence
         services.AddSingleton<DatabaseManager>(sp =>

@@ -22,6 +22,13 @@ public class UserSettings
     // Gameplay
     public bool AutoQueenPromotion { get; set; } = false;
     public bool ShowEngineEvalDuringPlay { get; set; } = false;
+
+    // AI Coach Settings
+    public string GeminiApiKey { get; set; } = string.Empty;
+    public string GeminiModel { get; set; } = "gemini-2.5-flash";
+    public bool EnableAiCoach { get; set; } = true;
+    public string CoachPersona { get; set; } = "Encouraging Grandmaster";
+    public string CoachSkillLevel { get; set; } = "Intermediate";
 }
 
 /// <summary>

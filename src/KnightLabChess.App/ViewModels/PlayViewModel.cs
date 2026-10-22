@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Chess;
+using KnightLabChess.Core.Coach;
 using KnightLabChess.Core.Engine;
 using KnightLabChess.Core.Models;
 using KnightLabChess.Core.Persistence;
@@ -10,16 +11,37 @@ using KnightLabChess.Core.Persistence;
 namespace KnightLabChess.App.ViewModels;
 
 /// <summary>
-/// ViewModel for the Play Arena page (Human vs Human, Human vs Computer/Stockfish, and Game Persistence).
+/// ViewModel for the Play Arena page (Human vs Human, Human vs Computer/Stockfish, AI Coach, and Game Persistence).
 /// </summary>
 public partial class PlayViewModel : PageViewModelBase
 {
     private readonly IGameRepository _gameRepository;
     private readonly IEngineService _engineService;
     private readonly IAudioService? _audioService;
+    private readonly IAiCoachService? _coachService;
+    private CancellationTokenSource? _coachCts;
+    private CancellationTokenSource? _engineCts;
 
     [ObservableProperty]
     private ChessBoardViewModel _board;
+
+    [ObservableProperty]
+    private bool _isCoachEnabled = true;
+
+    [ObservableProperty]
+    private bool _isCoachAnalyzing;
+
+    [ObservableProperty]
+    private CoachResponse? _latestCoachFeedback;
+
+    [ObservableProperty]
+    private bool _hasCoachFeedback;
+
+    [ObservableProperty]
+    private string _coachStatusText = "AI Coach ready";
+
+    [ObservableProperty]
+    private string _askCoachButtonText = "✦ Ask AI Coach";
 
     [ObservableProperty]
     private string _whitePlayerName = "White";
@@ -90,11 +112,16 @@ public partial class PlayViewModel : PageViewModelBase
     public bool IsAdvancedDifficulty => SelectedDifficulty == EngineDifficulty.Advanced;
     public bool IsMasterDifficulty => SelectedDifficulty == EngineDifficulty.Master;
 
-    public PlayViewModel(IGameRepository gameRepository, IEngineService engineService, IAudioService? audioService = null)
+    public PlayViewModel(
+        IGameRepository gameRepository,
+        IEngineService engineService,
+        IAudioService? audioService = null,
+        IAiCoachService? coachService = null)
     {
         _gameRepository = gameRepository;
         _engineService = engineService;
         _audioService = audioService;
+        _coachService = coachService;
         _board = new ChessBoardViewModel(audioService);
         PageTitle = "Play Chess";
         PageIcon = "♟";
@@ -120,6 +147,213 @@ public partial class PlayViewModel : PageViewModelBase
         };
 
         UpdatePlayerProfiles();
+    }
+
+    [RelayCommand]
+    public void DismissCoachFeedback()
+    {
+        HasCoachFeedback = false;
+        LatestCoachFeedback = null;
+    }
+
+    [RelayCommand]
+    public async Task RequestCoachAdviceAsync()
+    {
+        if (_coachService is null || Board.IsGameOver || IsCoachAnalyzing) return;
+
+        // When clicked before moving, provide strategic advice and candidate plans for the current position
+        await RequestPositionAdviceAsync();
+    }
+
+    /// <summary>
+    /// Evaluates the current position on the board to provide proactive advice, evaluation, and candidate moves.
+    /// </summary>
+    private async Task RequestPositionAdviceAsync()
+    {
+        if (_coachService is null) return;
+
+        _coachCts?.Cancel();
+        _coachCts = new CancellationTokenSource();
+        var ct = _coachCts.Token;
+
+        IsCoachAnalyzing = true;
+        AskCoachButtonText = "⏳ Analyzing...";
+        CoachStatusText = "AI Coach evaluating position...";
+        try
+        {
+            var eval = await _engineService.EvaluatePositionAsync(Board.CurrentFen, depth: 12, timeoutMs: 1400, cancellationToken: ct);
+            if (ct.IsCancellationRequested || eval is null) return;
+
+            string bestMoveSan = string.Empty;
+            if (!string.IsNullOrEmpty(eval.BestMoveUci))
+            {
+                var tempGame = new GeraChessGameAdapter(Board.CurrentFen);
+                var res = tempGame.MakeMove(eval.BestMoveUci);
+                if (res.Success && res.Move is not null)
+                {
+                    bestMoveSan = res.Move.San;
+                }
+            }
+
+            var explanation = await _coachService.ExplainPositionAsync(Board.CurrentFen, eval, ct);
+            if (ct.IsCancellationRequested) return;
+
+            int scoreCp = eval.ScoreCentipawns ?? 0;
+            string scoreFormatted = eval.MateInMoves.HasValue
+                ? $"Mate in {Math.Abs(eval.MateInMoves.Value)} ({(eval.MateInMoves.Value > 0 ? "Advantage" : "Threatened")})"
+                : $"Evaluation: {(scoreCp >= 0 ? "+" : "")}{(scoreCp / 100.0):0.00} pawns";
+
+            string candidateAdvice = !string.IsNullOrEmpty(bestMoveSan)
+                ? $"Suggested plan involves {bestMoveSan}. Prioritize piece activity and key square control."
+                : "Evaluate king safety and identify unprotected pieces.";
+
+            LatestCoachFeedback = new CoachResponse(
+                Success: true,
+                Classification: CoachMoveClassification.BestMove,
+                Title: "Position Advice & Tactical Plan",
+                Summary: scoreFormatted,
+                TacticalExplanation: explanation,
+                StrategicAdvice: candidateAdvice,
+                KeyThreats: [],
+                AlternativeIdea: !string.IsNullOrEmpty(bestMoveSan) ? $"Candidate move: {bestMoveSan}" : null
+            );
+            HasCoachFeedback = true;
+            CoachStatusText = "AI Coach: Position advice ready";
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Coach] Error evaluating position: {ex}");
+            CoachStatusText = "AI Coach unavailable";
+        }
+        finally
+        {
+            IsCoachAnalyzing = false;
+            AskCoachButtonText = "✦ Ask AI Coach";
+        }
+    }
+
+    /// <summary>
+    /// Analyzes the player's last move against the position before the move, calculating centipawn loss accurately.
+    /// </summary>
+    private async Task TriggerCoachAnalysisAsync(MoveRecord move)
+    {
+        if (_coachService is null) return;
+
+        _coachCts?.Cancel();
+        _coachCts = new CancellationTokenSource();
+        var ct = _coachCts.Token;
+
+        IsCoachAnalyzing = true;
+        CoachStatusText = "AI Coach analyzing your move...";
+        try
+        {
+            // Reconstruct the board state BEFORE the move was made
+            var tempGame = new GeraChessGameAdapter();
+            tempGame.LoadFromPosition(Board.Game.StartFen, Board.Game.MoveHistoryUci.Take(Board.Game.MoveHistoryUci.Count - 1));
+            string fenBefore = tempGame.CurrentFen;
+            string fenAfter = Board.CurrentFen;
+
+            // Evaluate the position before the move (where it was the player's turn to move)
+            var evalBefore = await _engineService.EvaluatePositionAsync(fenBefore, depth: 12, timeoutMs: 1200, cancellationToken: ct);
+            if (ct.IsCancellationRequested || evalBefore is null) return;
+
+            string? bestMoveUci = evalBefore.BestMoveUci;
+            string? bestMoveSan = null;
+
+            if (!string.IsNullOrEmpty(bestMoveUci))
+            {
+                var bestMoveRes = tempGame.MakeMove(bestMoveUci);
+                if (bestMoveRes.Success && bestMoveRes.Move is not null)
+                {
+                    bestMoveSan = bestMoveRes.Move.San;
+                }
+            }
+
+            // Check if player's move matched the engine's best move
+            bool isBest = !string.IsNullOrEmpty(bestMoveUci) &&
+                          string.Equals(move.Uci, bestMoveUci, StringComparison.OrdinalIgnoreCase);
+
+            int scoreBefore = evalBefore.ScoreCentipawns ?? 0;
+            int scoreAfter;
+            int cpLoss;
+            CoachMoveClassification classification;
+
+            if (isBest)
+            {
+                scoreAfter = scoreBefore;
+                cpLoss = 0;
+                classification = CoachMoveClassification.BestMove;
+            }
+            else
+            {
+                // Evaluate position after the move (from opponent's perspective, so invert for mover)
+                var evalAfter = await _engineService.EvaluatePositionAsync(fenAfter, depth: 10, timeoutMs: 1000, cancellationToken: ct);
+                if (ct.IsCancellationRequested) return;
+
+                // Invert because evalAfter is from opponent's perspective
+                scoreAfter = -(evalAfter?.ScoreCentipawns ?? 0);
+                cpLoss = Math.Max(0, scoreBefore - scoreAfter);
+
+                classification = cpLoss switch
+                {
+                    <= 15 => CoachMoveClassification.Excellent,
+                    <= 45 => CoachMoveClassification.Good,
+                    <= 90 => CoachMoveClassification.Inaccuracy,
+                    <= 250 => CoachMoveClassification.Mistake,
+                    _ => CoachMoveClassification.Blunder
+                };
+            }
+
+            // Convert principal variation UCI moves to SAN
+            var pvSan = new List<string>();
+            if (evalBefore.PrincipalVariation.Count > 0)
+            {
+                var pvGame = new GeraChessGameAdapter(fenBefore);
+                foreach (var pvUci in evalBefore.PrincipalVariation.Take(5))
+                {
+                    var pvRes = pvGame.MakeMove(pvUci);
+                    if (pvRes.Success && pvRes.Move is not null)
+                    {
+                        pvSan.Add(pvRes.Move.San);
+                    }
+                    else break;
+                }
+            }
+
+            var req = new CoachAnalysisRequest(
+                FenBefore: fenBefore,
+                FenAfter: fenAfter,
+                MoveSan: move.San,
+                MoveUci: move.Uci,
+                BestMoveSan: bestMoveSan ?? bestMoveUci,
+                BestMoveUci: bestMoveUci,
+                ScoreBeforeCp: scoreBefore,
+                ScoreAfterCp: scoreAfter,
+                MateIn: evalBefore.MateInMoves,
+                PrincipalVariationSan: pvSan,
+                Classification: classification,
+                SkillLevel: "Intermediate");
+
+            var coachResponse = await _coachService.AnalyzeMoveAsync(req, ct);
+            if (!ct.IsCancellationRequested && coachResponse != null)
+            {
+                LatestCoachFeedback = coachResponse;
+                HasCoachFeedback = true;
+                CoachStatusText = $"AI Coach: {coachResponse.Title}";
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Coach] Error analyzing move: {ex}");
+            CoachStatusText = "AI Coach unavailable";
+        }
+        finally
+        {
+            IsCoachAnalyzing = false;
+            AskCoachButtonText = "✦ Ask AI Coach";
+        }
     }
 
     public override async Task OnNavigatedToAsync()
@@ -177,27 +411,23 @@ public partial class PlayViewModel : PageViewModelBase
     [RelayCommand]
     private void SetPassAndPlayMode()
     {
+        _engineCts?.Cancel();
         SelectedMode = GameMode.HumanVsHuman;
     }
 
     [RelayCommand]
-    private void SetComputerMode()
+    private async Task SetComputerMode()
     {
         SelectedMode = GameMode.HumanVsComputer;
+        await CheckAndTriggerComputerMoveAsync();
     }
 
     [RelayCommand]
     private async Task SelectHumanColor(PieceColor color)
     {
+        _engineCts?.Cancel();
         HumanColor = color;
-        // If switching color in a fresh game where computer is white, trigger first move
-        if (SelectedMode == GameMode.HumanVsComputer &&
-            HumanColor == PieceColor.Black &&
-            Board.Game.MoveHistory.Count == 0 &&
-            !Board.IsGameOver)
-        {
-            await TriggerComputerMoveAsync();
-        }
+        await CheckAndTriggerComputerMoveAsync();
     }
 
     [RelayCommand]
@@ -327,6 +557,10 @@ public partial class PlayViewModel : PageViewModelBase
     [RelayCommand]
     private async Task StartNewGame()
     {
+        _engineCts?.Cancel();
+        _coachCts?.Cancel();
+        DismissCoachFeedback();
+
         Board.NewGame();
         if (SelectedMode == GameMode.HumanVsComputer)
         {
@@ -340,10 +574,18 @@ public partial class PlayViewModel : PageViewModelBase
         UpdatePlayerProfiles();
         ShowNotification($"New {SelectedMode} game started. White to move.");
 
-        // If computer plays white, trigger its opening move
-        if (SelectedMode == GameMode.HumanVsComputer && HumanColor == PieceColor.Black)
+        await CheckAndTriggerComputerMoveAsync();
+    }
+
+    private async Task CheckAndTriggerComputerMoveAsync()
+    {
+        if (SelectedMode == GameMode.HumanVsComputer && !Board.IsGameOver && !IsEngineThinking)
         {
-            await TriggerComputerMoveAsync();
+            var computerColor = HumanColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
+            if (Board.Game.ActiveTurn == computerColor)
+            {
+                await TriggerComputerMoveAsync();
+            }
         }
     }
 
@@ -351,25 +593,31 @@ public partial class PlayViewModel : PageViewModelBase
     {
         if (Board.IsGameOver || IsEngineThinking) return;
 
+        _engineCts?.Cancel();
+        _engineCts = new CancellationTokenSource();
+        var ct = _engineCts.Token;
+
         IsEngineThinking = true;
         Board.IsInputDisabled = true;
         EngineThinkingText = $"{EngineName} is calculating...";
 
         try
         {
-            // Allow brief UI update before engine calculates
-            await Task.Delay(200);
+            await Task.Delay(200, ct);
+            if (ct.IsCancellationRequested || Board.IsGameOver) return;
 
             var bestMove = await _engineService.GetBestMoveAsync(
                 Board.CurrentFen,
                 SelectedDifficulty,
-                moveTimeMs: 600);
+                moveTimeMs: 600,
+                cancellationToken: ct);
 
-            if (!string.IsNullOrEmpty(bestMove))
+            if (!string.IsNullOrEmpty(bestMove) && !ct.IsCancellationRequested && !Board.IsGameOver)
             {
                 Board.MakeMove(bestMove);
             }
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             ShowNotification($"Engine error: {ex.Message}");
@@ -385,11 +633,25 @@ public partial class PlayViewModel : PageViewModelBase
     [RelayCommand]
     private void UndoLastMove()
     {
+        _engineCts?.Cancel();
+        _coachCts?.Cancel();
+
         if (SelectedMode == GameMode.HumanVsComputer)
         {
-            // In computer mode, undo two plies (computer's move + human's move)
-            Board.UndoMove();
-            Board.UndoMove();
+            // If human is Black and only 1 move was made (computer's opening move), undo 1 ply
+            if (HumanColor == PieceColor.Black && Board.Game.MoveHistory.Count == 1)
+            {
+                Board.UndoMove();
+            }
+            else
+            {
+                // In computer mode, undo two plies (computer's move + human's move)
+                Board.UndoMove();
+                Board.UndoMove();
+            }
+
+            // Check if it is now computer's turn
+            _ = CheckAndTriggerComputerMoveAsync();
         }
         else
         {
@@ -408,6 +670,8 @@ public partial class PlayViewModel : PageViewModelBase
     [RelayCommand]
     private void ClaimDraw()
     {
+        _engineCts?.Cancel();
+        _coachCts?.Cancel();
         Board.ClaimDraw();
         _audioService?.Play(ChessSound.GameOver);
         UpdatePlayerProfiles();
@@ -416,7 +680,17 @@ public partial class PlayViewModel : PageViewModelBase
     [RelayCommand]
     private void Resign()
     {
-        Board.Resign();
+        _engineCts?.Cancel();
+        _coachCts?.Cancel();
+
+        if (SelectedMode == GameMode.HumanVsComputer)
+        {
+            Board.Resign(HumanColor);
+        }
+        else
+        {
+            Board.Resign();
+        }
         _audioService?.Play(ChessSound.GameOver);
         UpdatePlayerProfiles();
     }
@@ -456,13 +730,26 @@ public partial class PlayViewModel : PageViewModelBase
         var saved = recent[0];
         try
         {
+            _engineCts?.Cancel();
+            _coachCts?.Cancel();
+            DismissCoachFeedback();
+
             var moves = JsonSerializer.Deserialize<List<string>>(saved.MoveHistoryJson) ?? [];
             Board.LoadGame(saved.StartFen, moves);
 
-            if (saved.WhitePlayer.Contains("Stockfish") || saved.BlackPlayer.Contains("Stockfish"))
+            bool isComputerGame = saved.WhitePlayer.Contains("Stockfish", StringComparison.OrdinalIgnoreCase) ||
+                                  saved.BlackPlayer.Contains("Stockfish", StringComparison.OrdinalIgnoreCase) ||
+                                  saved.WhitePlayer.Contains("Engine", StringComparison.OrdinalIgnoreCase) ||
+                                  saved.BlackPlayer.Contains("Engine", StringComparison.OrdinalIgnoreCase) ||
+                                  (!string.IsNullOrEmpty(EngineName) && (saved.WhitePlayer.Contains(EngineName, StringComparison.OrdinalIgnoreCase) || saved.BlackPlayer.Contains(EngineName, StringComparison.OrdinalIgnoreCase)));
+
+            if (isComputerGame)
             {
                 SelectedMode = GameMode.HumanVsComputer;
-                HumanColor = saved.WhitePlayer.Contains("Stockfish") ? PieceColor.Black : PieceColor.White;
+                bool computerIsWhite = saved.WhitePlayer.Contains("Stockfish", StringComparison.OrdinalIgnoreCase) ||
+                                       saved.WhitePlayer.Contains("Engine", StringComparison.OrdinalIgnoreCase) ||
+                                       (!string.IsNullOrEmpty(EngineName) && saved.WhitePlayer.Contains(EngineName, StringComparison.OrdinalIgnoreCase));
+                HumanColor = computerIsWhite ? PieceColor.Black : PieceColor.White;
             }
             else
             {
@@ -472,6 +759,8 @@ public partial class PlayViewModel : PageViewModelBase
             Board.IsFlipped = (SelectedMode == GameMode.HumanVsComputer && HumanColor == PieceColor.Black);
             UpdatePlayerProfiles();
             ShowNotification($"Loaded game #{saved.Id} ({saved.WhitePlayer} vs {saved.BlackPlayer}, {saved.MoveCount} moves).");
+
+            await CheckAndTriggerComputerMoveAsync();
         }
         catch (Exception ex)
         {

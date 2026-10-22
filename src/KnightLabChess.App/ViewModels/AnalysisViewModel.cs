@@ -1,17 +1,23 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnightLabChess.Core.Audio;
 using KnightLabChess.Core.Chess;
+using KnightLabChess.Core.Coach;
 using KnightLabChess.Core.Engine;
 
 namespace KnightLabChess.App.ViewModels;
 
 /// <summary>
-/// ViewModel for the interactive Stockfish Analysis board with live Evaluation Bar.
+/// ViewModel for the interactive Stockfish Analysis board with live Evaluation Bar and Gemini AI Coach.
 /// </summary>
 public partial class AnalysisViewModel : PageViewModelBase
 {
     private readonly IEngineService _engineService;
+    private readonly IAiCoachService? _coachService;
+    private readonly IAudioService? _audioService;
     private CancellationTokenSource? _evalCts;
+    private CancellationTokenSource? _coachCts;
+    private EngineEvaluation? _lastEvaluation;
 
     [ObservableProperty] private ChessBoardViewModel _board;
     [ObservableProperty] private bool _isAnalyzing = true;
@@ -24,22 +30,69 @@ public partial class AnalysisViewModel : PageViewModelBase
     [ObservableProperty] private string _customFenInput = string.Empty;
     [ObservableProperty] private string _engineStatusText = "Stockfish Active";
     [ObservableProperty] private bool _isWhiteAdvantage = true;
+    [ObservableProperty] private string _coachExplanation = "Click 'Ask AI Coach' for positional insights.";
+    [ObservableProperty] private bool _isCoachThinking;
+    [ObservableProperty] private string _askCoachButtonText = "✦ Ask Coach";
 
-    public AnalysisViewModel(IEngineService engineService)
+    public AnalysisViewModel(IEngineService engineService, IAiCoachService? coachService = null, IAudioService? audioService = null)
     {
         _engineService = engineService;
-        _board = new ChessBoardViewModel();
+        _coachService = coachService;
+        _audioService = audioService;
+        _board = new ChessBoardViewModel(audioService);
         PageTitle = "Analysis";
         PageIcon = "🔍";
 
         Board.MoveMade += async (_, _) =>
         {
             CustomFenInput = Board.CurrentFen;
+            _lastEvaluation = null;
+            CoachExplanation = "Click 'Ask AI Coach' for positional insights.";
             if (IsAnalyzing)
             {
                 await RunEvaluationAsync();
             }
         };
+    }
+
+    [RelayCommand]
+    public async Task AskCoachAsync()
+    {
+        if (_coachService is null)
+        {
+            CoachExplanation = "AI Coach is not configured.";
+            return;
+        }
+
+        _coachCts?.Cancel();
+        _coachCts = new CancellationTokenSource();
+        IsCoachThinking = true;
+        AskCoachButtonText = "⏳ Thinking...";
+        CoachExplanation = "AI Coach is analyzing position...";
+
+        try
+        {
+            var eval = _lastEvaluation ?? await _engineService.EvaluatePositionAsync(Board.CurrentFen, depth: 12, timeoutMs: 1400, cancellationToken: _coachCts.Token);
+            if (eval != null)
+            {
+                _lastEvaluation = eval;
+                CoachExplanation = await _coachService.ExplainPositionAsync(Board.CurrentFen, eval, _coachCts.Token);
+            }
+            else
+            {
+                CoachExplanation = "Position evaluation in progress. Please try again.";
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            CoachExplanation = $"AI Coach unavailable: {ex.Message}";
+        }
+        finally
+        {
+            IsCoachThinking = false;
+            AskCoachButtonText = "✦ Ask Coach";
+        }
     }
 
     public override async Task OnNavigatedToAsync()
@@ -66,6 +119,7 @@ public partial class AnalysisViewModel : PageViewModelBase
             EngineStatusText = "Analyzing position...";
             var eval = await _engineService.EvaluatePositionAsync(Board.CurrentFen, depth: 14, timeoutMs: 1200, cancellationToken: ct);
             if (eval is null || ct.IsCancellationRequested) return;
+            _lastEvaluation = eval;
 
             EvalDepth = eval.Depth;
             NodesPerSecond = eval.NodesPerSecond;
@@ -133,6 +187,8 @@ public partial class AnalysisViewModel : PageViewModelBase
         try
         {
             Board.LoadFen(CustomFenInput.Trim());
+            _lastEvaluation = null;
+            CoachExplanation = "Click 'Ask AI Coach' for positional insights.";
             if (IsAnalyzing)
             {
                 await RunEvaluationAsync();
@@ -149,6 +205,8 @@ public partial class AnalysisViewModel : PageViewModelBase
     {
         Board.NewGame();
         CustomFenInput = Board.CurrentFen;
+        _lastEvaluation = null;
+        CoachExplanation = "Click 'Ask AI Coach' for positional insights.";
         if (IsAnalyzing)
         {
             await RunEvaluationAsync();
@@ -166,6 +224,8 @@ public partial class AnalysisViewModel : PageViewModelBase
     {
         Board.UndoMove();
         CustomFenInput = Board.CurrentFen;
+        _lastEvaluation = null;
+        CoachExplanation = "Click 'Ask AI Coach' for positional insights.";
         if (IsAnalyzing)
         {
             await RunEvaluationAsync();

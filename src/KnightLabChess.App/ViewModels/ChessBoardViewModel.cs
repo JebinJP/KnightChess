@@ -28,6 +28,7 @@ public partial class BoardSquareViewModel : ObservableObject
     [ObservableProperty] private string? _fileLabel;
     [ObservableProperty] private bool _hasRankLabel;
     [ObservableProperty] private bool _hasFileLabel;
+    [ObservableProperty] private bool _isBeingDragged;
 
     public string SquareName => $"{(char)('a' + File)}{Rank + 1}";
 }
@@ -141,6 +142,11 @@ public partial class ChessBoardViewModel : ObservableObject
     [RelayCommand]
     public void NewGame()
     {
+        ClearSelection();
+        foreach (var sq in Squares)
+        {
+            sq.IsBeingDragged = false;
+        }
         _game.ResetToStartingPosition();
         IsGameOver = false;
         GameResultText = null;
@@ -195,14 +201,31 @@ public partial class ChessBoardViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Resigns the active game for the current player.
+    /// Resigns the active game for the current player or an explicitly specified player.
     /// </summary>
     [RelayCommand]
-    public void Resign()
+    public void Resign(object? parameter = null)
     {
         if (IsGameOver) return;
 
-        _game.Resign(_game.ActiveTurn);
+        PieceColor resigningPlayer = parameter switch
+        {
+            PieceColor c => c,
+            string s when Enum.TryParse<PieceColor>(s, true, out var parsed) => parsed,
+            _ => _game.ActiveTurn
+        };
+
+        _game.Resign(resigningPlayer);
+        UpdateBoardDisplay();
+    }
+
+    /// <summary>
+    /// Strongly-typed overload to resign an explicit player color.
+    /// </summary>
+    public void Resign(PieceColor resigningPlayer)
+    {
+        if (IsGameOver) return;
+        _game.Resign(resigningPlayer);
         UpdateBoardDisplay();
     }
 
@@ -210,9 +233,9 @@ public partial class ChessBoardViewModel : ObservableObject
     /// Handles user click on a square.
     /// </summary>
     [RelayCommand]
-    public void SelectSquare(BoardSquareViewModel square)
+    public void SelectSquare(BoardSquareViewModel? square)
     {
-        if (_isHandlingMove || IsInputDisabled || IsGameOver) return;
+        if (square is null || _isHandlingMove || IsInputDisabled || IsGameOver) return;
 
         // If no square currently selected
         if (SelectedSquare is null)
@@ -245,16 +268,49 @@ public partial class ChessBoardViewModel : ObservableObject
         }
 
         // Attempting to move from SelectedSquare to clicked square
+        TryExecuteMove(SelectedSquare, square);
+    }
+
+    /// <summary>
+    /// Attempts to execute a move between two board squares with full rules validation,
+    /// promotion handling, castling gesture translation, and audio/event dispatch.
+    /// Used by both click-to-move and drag-and-drop.
+    /// Returns true if the move was successfully made; false otherwise.
+    /// </summary>
+    public bool TryExecuteMove(BoardSquareViewModel? fromSquare, BoardSquareViewModel? toSquare)
+    {
+        if (fromSquare is null || toSquare is null) return false;
+        if (_isHandlingMove || IsInputDisabled || IsGameOver) return false;
+
         _isHandlingMove = true;
         try
         {
-            var from = new BoardSquare(SelectedSquare.File, SelectedSquare.Rank);
-            var to = new BoardSquare(square.File, square.Rank);
+            var from = new BoardSquare(fromSquare.File, fromSquare.Rank);
+            var to = new BoardSquare(toSquare.File, toSquare.Rank);
+
+            // Castling shortcut: allow King dragged directly onto friendly Rook on the home rank
+            var piece = _game.GetPieceAt(from);
+            if (piece?.Type == PieceType.King && piece.Color == _game.ActiveTurn)
+            {
+                var targetPiece = _game.GetPieceAt(to);
+                if (targetPiece?.Type == PieceType.Rook && targetPiece.Color == piece.Color && from.Rank == to.Rank)
+                {
+                    // Kingside castling gesture (King onto h-file Rook) -> King moves to g-file (file 6)
+                    if (to.File == 7)
+                    {
+                        to = new BoardSquare(6, from.Rank);
+                    }
+                    // Queenside castling gesture (King onto a-file Rook) -> King moves to c-file (file 2)
+                    else if (to.File == 0)
+                    {
+                        to = new BoardSquare(2, from.Rank);
+                    }
+                }
+            }
 
             // 1. Verify if this move is a legal pawn promotion move
             if (_game.IsPromotionMove(from, to))
             {
-                var piece = _game.GetPieceAt(from);
                 var color = piece?.Color ?? _game.ActiveTurn;
 
                 // Prompt user for promotion piece
@@ -266,7 +322,7 @@ public partial class ChessBoardViewModel : ObservableObject
                 if (!promo.HasValue)
                 {
                     ClearSelection();
-                    return;
+                    return false;
                 }
 
                 if (_game.IsLegalMove(from, to, promo.Value))
@@ -279,13 +335,14 @@ public partial class ChessBoardViewModel : ObservableObject
                         UpdateBoardDisplay();
                         PlayAudioForMove(moveResult);
                         MoveMade?.Invoke(this, moveResult.Move!.San);
+                        return true;
                     }
                 }
                 else
                 {
                     ClearSelection();
                 }
-                return;
+                return false;
             }
 
             // 2. Standard (non-promotion) move validation and execution
@@ -299,6 +356,7 @@ public partial class ChessBoardViewModel : ObservableObject
                     UpdateBoardDisplay();
                     PlayAudioForMove(moveResult);
                     MoveMade?.Invoke(this, moveResult.Move!.San);
+                    return true;
                 }
             }
             else
@@ -306,6 +364,8 @@ public partial class ChessBoardViewModel : ObservableObject
                 // Reject illegal move cleanly without mutating board or opening dialogs
                 ClearSelection();
             }
+
+            return false;
         }
         finally
         {
@@ -443,7 +503,11 @@ public partial class ChessBoardViewModel : ObservableObject
         }
     }
 
-    private void ClearSelection()
+    /// <summary>
+    /// Clears any selected square and removes legal move dot indicators.
+    /// </summary>
+    [RelayCommand]
+    public void ClearSelection()
     {
         if (SelectedSquare is not null)
         {

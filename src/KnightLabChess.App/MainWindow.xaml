@@ -69,6 +69,18 @@
                                    HorizontalAlignment="Center"
                                    Foreground="{StaticResource TextMutedBrush}"
                                    Margin="0,2,0,0" />
+                        <Border Background="{StaticResource AccentSubtleBrush}"
+                                BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="8,2"
+                                HorizontalAlignment="Center"
+                                Margin="0,6,0,0">
+                            <TextBlock Text="v2.0 Release"
+                                       FontSize="10"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource AccentLightBrush}" />
+                        </Border>
                     </StackPanel>
                 </Border>
 

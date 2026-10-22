@@ -19,4 +19,9 @@ public interface IAudioService
     /// Plays the requested sound effect asynchronously if audio is enabled.
     /// </summary>
     void Play(ChessSound sound);
+
+    /// <summary>
+    /// Updates the audio settings (enabled state and volume level) at runtime.
+    /// </summary>
+    void UpdateSettings(bool isEnabled, int volume);
 }
